@@ -1,5 +1,5 @@
 
-// Constants
+// ===================== Constants =====================
 // These values taken from wikipedia
 const C : f64            = 299792458;
 // Free space constants
@@ -23,6 +23,8 @@ const H_EV : f64         = 4.135667696e-15;
 const EARTH_IRRAD : f64  = 1.37e3;
 // Mean exoatmospheric irradiance
 const EXOATMO_RAD : f64  = 2.02e7;
+
+// ===================== Basic EM in free space =====================
 
 fn angular_frequency(f : f64) -> f64 {
     return f * 2 * PI;
@@ -102,3 +104,8 @@ fn bb_radiation(temp : f64) -> f64 {
 // TODO
 
 // TODO: Fraunhofer diffraction
+
+// ===================== EM radiation interacting with matter =====================
+
+
+// ===================== EM radiation interacting with Earths atmosphere =====================
