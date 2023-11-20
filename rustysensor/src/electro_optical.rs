@@ -45,7 +45,7 @@ mod el_opt {
 		return ((n as f64) * wavelength / d).asin();
 	}
 
-	#[requires(lambda >= 0.52e-6 && lambda <= 2.43e-6, "Wavelength must be in VNIR region!")]
+	#[requires(lambda >= 0.52e-6 && lambda <= 2.43e-6, "Wavelength must be in ASTER VNIR region!")]
 	#[ensures(ret > 0 && ret < 10)]
 	fn aster(lamda : f64) -> u8 {
 		if lambda =< 0.6e-6 {
@@ -179,5 +179,40 @@ mod el_opt {
 			assert!(false, "Invalid modis wavelength");
 			return 1; // make rustc happy
 		}
+	}
+
+	#[requires(theta > 0 && theta < 6.28, "Angle must be greater than zero and less than 2PI")]
+	#[requires(temp_a > 0 && temp_b1 > 0 && temp_b2 > 0, "All temperatures must be greater than 0")
+	#[requires(temp_b2 > temp_a == temp_b1 > temp_a)]
+	#[ensures(ret > 0)]
+	fn surface_temp(temp_b1 : f64, temp_b2 : f64, temp_a, theta : f64) -> f64 {
+		let mut tau : f64 = 0.0; // Filler instantiation
+		return surface_temp_tau(temp_b1, temp_b2, temp_a, theta, tau);
+	}
+
+	/*
+	 * Calculates surface temperature, $T_{b0}$ and optical thickness $\tau$
+	 * given data from two separate sensors and known temperatures at those
+	 * sensors.
+	 *
+	 * First, $\tau$ is calculated using the following derivation
+	 * \begin{align*}
+	 *     T_{b1} &= T_{b0}\exp(-\tau) + T_a (1 - \exp(-\tau)) \\
+	 *     T_{b2} &= T_{b0}\exp(-\tau\sec(\theta)) + T_a (1 - \exp(-\tau\sec(\theta))) \\
+	 *     T_{b0} &= \frac{T_{b2} - T_A(1 - \exp(-\tau\sec(\theta))}{\exp(-\tau\sec(\theta)} = \frac{T_{b1} - T_A(1 - \exp(-\tau))}{\exp(-\tau)} \\
+	 *     \frac{T_{b2} - T_A}{\exp(-\tau\sec{\theta}} + T_A =  \frac{T_{b1} - T_A}{\exp(-\tau} + T_A \\
+	 *      \ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right) &= \tau\sec(\theta) \\
+	 *      \tau &= \frac{1}{\sec \theta}\ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right)
+	 * \end{align*}
+	 * We therefore compute $\tau$ using the last equation in that list and then use that to calculate $T_{b0}$.
+	 * */
+	#[requires(theta > 0 && theta < 6.28, "Angle must be greater than zero and less than 2PI")]
+	#[requires(temp_a > 0 && temp_b1 > 0 && temp_b2 > 0, "All temperatures must be greater than 0")
+	#[requires(temp_b2 > temp_a == temp_b1 > temp_a)]
+	#[ensures(ret > 0)]
+	fn surface_temp_tau(temp_b1 : f64, temp_b2 : f64, temp_a, theta : f64, tau : &mut f64) -> f64 {
+		// find tau
+		tau = (1 / theta.sec()) * ((temp_b2 - temp_a) / (temp_b1 - temp_a)).ln();
+		return (temp_b1 + temp_a * (1 - (-tau).exp())) / (-tau).exp();
 	}
 }
