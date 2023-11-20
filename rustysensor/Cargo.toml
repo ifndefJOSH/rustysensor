@@ -2,8 +2,10 @@
 name = "rustysensor"
 version = "0.1.0"
 edition = "2021"
-author = "Josh Jeppson (ifndefJOSH)"
+authors = [ "Josh Jeppson (ifndefJOSH)" ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+contracts
+assume
