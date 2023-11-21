@@ -9,6 +9,16 @@ mod el_opt {
 			, lbound : f64
 			, ubound : f64
 		}
+		let aster = [Range { index : 1, lbound : 0.0, ubound : 0.6e-6 },
+					Range { index : 2, lbound : 0.63e-6, ubound : 0.69e-6 },
+					Range { index : 3, lbound : 0.76e-6, ubound : 0.86e-6 },
+					Range { index : 4, lbound : 1.6e-6, ubound : 1.7e-6 },
+					Range { index : 5, lbound : 2.145e-6, ubound : 2.185e-6 },
+					Range { index : 6, lbound : 2.185e-6, ubound : 2.225e-6 },
+					Range { index : 7, lbound : 2.235e-6, ubound : 2.285e-6 },
+					Range { index : 8, lbound : 2.295e-6, ubound : 2.365e-6 },
+					Range { index : 9, lbound : 2.365e-6, ubound : 2.430e-6 }];
+
 		let modis = [Range { index : 1, lbound : 6.2e-07, ubound : 6.7e-07 },
 					Range { index : 2, lbound : 8.41e-07, ubound : 8.76e-07 },
 					Range { index : 3, lbound : 4.59e-07, ubound : 4.79e-07 },
