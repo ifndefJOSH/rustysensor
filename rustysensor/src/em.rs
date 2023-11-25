@@ -1,4 +1,4 @@
-
+use contracts::*;
 // ===================== Basic EM in free space =====================
 
 mod em {

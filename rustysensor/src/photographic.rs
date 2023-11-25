@@ -1,2 +1,2 @@
-
+use contracts::*;
 // ===================== Photographic systems =====================
