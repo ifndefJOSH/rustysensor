@@ -223,6 +223,8 @@ mod el_opt {
 	fn surface_temp_tau(temp_b1 : f64, temp_b2 : f64, temp_a, theta : f64, tau : &mut f64) -> f64 {
 		// find tau
 		tau = (1 / theta.sec()) * ((temp_b2 - temp_a) / (temp_b1 - temp_a)).ln();
-		return (temp_b1 + temp_a * (1 - (-tau).exp())) / (-tau).exp();
+		// Used twice, so only calculate once
+		let minus_tau_exp = (-tau).exp();
+		return (temp_b1 + temp_a * (1 - minus_tau_exp)) / minus_tau_exp;
 	}
 }
