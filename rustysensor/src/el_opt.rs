@@ -161,6 +161,9 @@ mod el_opt {
 		}
 	}
 
+	/*
+	 * Returns the OCM-2 band given an OCM-2 wavelength
+	 * */
 	#[requires(lambda >= 4.04e-7 && lambda <= 8.85-7, "Wavelength must be in accurate OCM-2 region!")]
 	#[ensures(ret > 0 && ret < 8)]
 	fn ocm_2(lambda : f64) -> u8 {
@@ -263,6 +266,9 @@ mod el_opt {
 		return (heat_capacity * density * thermal_conductivity).sqrt();
 	}
 
+	/*
+	 * Calculates thermal wave speed via heat capacity, material density, thermal conductivity, and angular frequency
+	 * */
 	#[requires(heat_capacity > 0.0)]
 	#[requires(density > 0.0)]
 	#[requires(angular_frequency > 0.0)]
@@ -272,6 +278,9 @@ mod el_opt {
 		return ((2.0 * thermal_conductivity * angular_frequency) / (heat_capacity * density)).sqrt();
 	}
 
+	/*
+	 * Calculates thermal diffusivity
+	 * */
 	#[requires(heat_capacity > 0.0)]
 	#[requires(density > 0.0)]
 	#[requires(thermal_conductivity > 0.0)]
@@ -280,6 +289,10 @@ mod el_opt {
 		return thermal_conductivity / (heat_capacity * density);
 	}
 
+	/*
+	 * Calculates the weight factor $\alpha$ of the upward heat flux used in the equation
+	 * $\alpha(T - \bar{T})$
+	 * */
 	#[requires(emissivity > 0.0)]
 	#[requires(mean_temp > 0.0)]
 	#[ensures(ret > 0.0)]
@@ -287,6 +300,10 @@ mod el_opt {
 		return 4.0 * emissivity * SIGMA * mean_temp.pow(3);
 	}
 
+	/*
+	 * Calculates upward heat flux given measured temperature, mean temperature, and the emissivity
+	 * of the surface
+	 * */
 	#[requires(emissivity > 0.0)]
 	#[requires(mean_temp > 0.0)]
 	#[requires(temp > 0.0)]
