@@ -2,15 +2,15 @@ use contracts::*;
 // ===================== Passive Microwave Systems =====================
 
 mod muwave {
-	use em::consts::*;
+	// use em::consts::*;
 
 	enum AntennaType {
-		MONOPOLE
-		, SHORT_DIPOLE
-		, HALF_WAVE_DIPOLE
-		, YAGI_YUDA_6
-		, RECTANGULAR
-		, PARABOLOID // (Circular paraboloid)
+		Monopole
+		, ShortDipole
+		, HalfWaveDipole
+		, YagiYudaSix
+		, Rectangular
+		, Parabaloid // (Circular paraboloid)
 	}
 
 	mod instruments {
@@ -57,19 +57,19 @@ mod muwave {
 	 * 2. For Circular paraboloid it's the diameter
 	 * */
 	fn hpbw(lambda : f64, size : f64, atype : AntennaType) -> f64 {
-		if atype == AntennaType::MONOPOLE {
+		if atype == AntennaType::Monopole {
 			return 0.0; // isomorphic
 		}
-		else if atype == AntennaType::SHORT_DIPOLE || atype == AntennaType::HALF_WAVE_DIPOLE {
+		else if atype == AntennaType::ShortDipole || atype == AntennaType::HalfWaveDipole {
 			return 90.0;
 		}
-		else if atype == AntennaType::YAGI_YUDA_6 {
+		else if atype == AntennaType::YagiYudaSix {
 			return 42.0;
 		}
-		else if atype == AntennaType::RECTANGULAR {
+		else if atype == AntennaType::Rectangular {
 			return 51.0 * (lambda / size);
 		}
-		else { // Parabaloid
+		else { // Paraboloid
 			return 72.0 * (lambda / size);
 		}
 	}
@@ -78,10 +78,15 @@ mod muwave {
 	 * Computes the directivity given beam solid angle
 	 * bsa: Beam solid angle
 	 * */
+	#[requires(bsa >= 0 && bsa <= 6.29)]
+	#[ensures(ret <= 2.0 && ret >= 0.0)]
 	fn directivity(bsa : f64) -> f64 {
 		return 4 * PI / bsa;
 	}
 
+	/**
+	 * Computes beam solid angle from power pattern via numerical integration
+	 * */
 	fn beam_solid_angle(P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
 		let s : f64 = step.unwrap_or(0.01);
 		// Size of square for integration
@@ -98,6 +103,9 @@ mod muwave {
 		return sum;
 	}
 
+	/**
+	 * Computes antenna temperature via numerical integration
+	 * */
 	fn antenna_temp(TB: &dyn Fn(f64, f64) -> f64, P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
 		let bsa = beam_solid_angle(P, step);
 		let s : f64 = step.unwrap_or(0.01);
@@ -115,25 +123,40 @@ mod muwave {
 		return sum / bsa;
 	}
 
+	/**
+	 * Computes forward gain using power pattern and efficiency
+	 * */
 	fn forward_gain(efficiency : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
 		// Directivity
 		let d = 4 * PI / beam_solid_angle(P);
 		return efficiency * d;
 	}
 
+	/**
+	 * Computes spectral radiance given temperature and wavelength
+	 * */
 	fn spectral_radiance(tb : f64, wavelength : f64) {
 		return 2 * K * tb / wavelength.pow(2);
 	}
 
+	/**
+	 * Computes spectral flux density
+	 * */
 	fn spectral_flux_density(tb : f64, wavelength : f64, small_angle : f64) -> f64 {
 		return 2 * K * tb * small_angle / wavelength.pow(2);
 	}
 
+	/**
+	 * Computes the effective area of an antenna
+	 * */
 	fn effective_area(wavelength : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
 		let bsa = beam_solid_angle(P);
 		return wavelength.pow(2) / bsa;
 	}
 
+	/**
+	 * Computes antenna sensitivity ($\Delta T$)
+	 * */
 	fn sensitivity(sys_temp : f64, C : Option<f64>, del_t : Option<f64>, del_f : Option<f64>) -> f64 {
 		let c_val = C.unwrap_or(5);
 		let d_t = del_t.unwrap_or(0.01);
@@ -141,12 +164,32 @@ mod muwave {
 		return C * sys_temp / (d_t * d_f).sqrt();
 	}
 
+	/**
+	 * Computes cross-polarization gradient ratio ($XPGR$)
+	 * */
 	fn xpgr(t_19h : f64, t_37v : f64) -> f64 {
 		return (t_19h - t_37v) / (t_19h + t_37v);
 	}
 
-	fn corrected_temp(tau : f64, T : Option<f64>) -> f64 {
-		return T.unwrap_or(250.0) * (1 - (-tau).exp());
+	/**
+	 * Computes polarization ratio ($PR$)
+	 * */
+	fn polarization_ratio(t_19h : f64, t_19v : f64) -> f64 {
+		return (t_19v - t_19h) / (t_19v + t_19h);
+	}
+
+	/**
+	 * Computes gradient ratio ($GR$)
+	 * */
+	fn gradient_ratio(t_19v : f64, t_37v : f64) -> f64 {
+		return (t_37v - t_19v) / (t_37v + t_19v);
+	}
+
+	/**
+	 * Computes upwelling component ($T_b$) of temperature through atmosphere.
+	 * */
+	fn upwelling_component(tau : f64, T : &dyn Fn(f64) -> f64) -> f64 {
+		return T(1 - (-tau).exp());
 	}
 
 }

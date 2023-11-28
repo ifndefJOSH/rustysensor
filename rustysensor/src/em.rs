@@ -12,16 +12,16 @@ mod em {
 		const MU_0 : f64         = 1.25663706212e-6;
 		const EPSILON_0_SI : f64 = 8.8541878128e-12;
 		const EPSILON_0_EV : f64 = 55.26349406;
-		const Z0 : f64           = sqrt(MU_0 / EPSILON_0_SI);
-		const Z0_EV : f64        = sqrt(MU_0 / EPSILON_0_EV);
+		const Z0 : f64           = (MU_0 / EPSILON_0_SI).sqrt();
+		const Z0_EV : f64        = (MU_0 / EPSILON_0_EV).sqrt();
 		// Other math constants
 		const PI : f64           = 3.141592653589793;
 		// Boltzmann constant
 		const K : f64            = 1.380649e-23;
 		const SIGMA : f64        = 5.670367e-8;
 		// Wave numbers
-		const K_E_SI : f64       = 1 / (4 * PI * EPSILON_0_SI);
-		const K_E_EV : f64       = 1 / (4 * PI * EPSILON_0_EV);
+		const K_E_SI : f64       = 1.0 / (4.0 * PI * EPSILON_0_SI);
+		const K_E_EV : f64       = 1.0 / (4.0 * PI * EPSILON_0_EV);
 		// Planck Constant
 		const H : f64            = 6.62607015e-34;
 		const H_EV : f64         = 4.135667696e-15;
@@ -77,7 +77,7 @@ mod em {
 	#[requires(angle > 0 && angle < 2 * PI, "Angle (in radians) must be between 0 and 2PI")]
 	#[ensures(ret > 0)]
 	fn doppler_ratio(velocity : f64, angle : f64) -> f64 {
-		return sqrt(1 - velocity.pow(2) / C.pow(2)) / (1 - velocity * angle.cos() / C);
+		return (1 - velocity.pow(2) / C.pow(2)) / (1 - velocity * angle.cos() / C).sqrt();
 	}
 
 	/**
@@ -133,9 +133,9 @@ mod em {
 		return SIGMA * temp.pow(4);
 	}
 
-	/**
-	* Finds a temperature from emissivity
-	* */
+	// /**
+	// * Finds a temperature from emissivity
+	// * */
 	// TODO
 
 	// TODO: Fraunhofer diffraction

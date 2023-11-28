@@ -1,7 +1,7 @@
-use contracts::*;
 // ===================== Electro Optical Systems =====================
 
 mod el_opt {
+	use contracts::*;
 	mod tables {
 		#[derive(Clone, Debug)]
 		struct Range {
@@ -9,7 +9,8 @@ mod el_opt {
 			, lbound : f64
 			, ubound : f64
 		}
-		let aster = [Range { index : 1, lbound : 0.0, ubound : 0.6e-6 },
+		const aster : [Range; 9]
+					= [Range { index : 1, lbound : 0.0, ubound : 0.6e-6 },
 					Range { index : 2, lbound : 0.63e-6, ubound : 0.69e-6 },
 					Range { index : 3, lbound : 0.76e-6, ubound : 0.86e-6 },
 					Range { index : 4, lbound : 1.6e-6, ubound : 1.7e-6 },
@@ -19,7 +20,8 @@ mod el_opt {
 					Range { index : 8, lbound : 2.295e-6, ubound : 2.365e-6 },
 					Range { index : 9, lbound : 2.365e-6, ubound : 2.430e-6 }];
 
-		let modis = [Range { index : 1, lbound : 6.2e-07, ubound : 6.7e-07 },
+		const modis : [Range; 19]
+					= [Range { index : 1, lbound : 6.2e-07, ubound : 6.7e-07 },
 					Range { index : 2, lbound : 8.41e-07, ubound : 8.76e-07 },
 					Range { index : 3, lbound : 4.59e-07, ubound : 4.79e-07 },
 					Range { index : 4, lbound : 5.45e-07, ubound : 5.65e-07 },
@@ -39,7 +41,8 @@ mod el_opt {
 					Range { index : 18, lbound : 9.31e-07, ubound : 9.41e-07 },
 					Range { index : 19, lbound : 9.15e-07, ubound : 9.65e-07 }];
 
-		let ocm_2 = [Range { index : 1, lbound : 4.04e-07, ubound : 4.24e-07 },
+		const ocm_2  : [Range; 8]
+					= [Range { index : 1, lbound : 4.04e-07, ubound : 4.24e-07 },
 					Range { index : 2, lbound : 4.31e-07, ubound : 4.51e-07 },
 					Range { index : 3, lbound : 4.76e-07, ubound : 4.96e-07 },
 					Range { index : 4, lbound : 5e-07, ubound : 5.2e-07 },
@@ -58,7 +61,7 @@ mod el_opt {
 	#[requires(lambda >= 0.52e-6 && lambda <= 2.43e-6, "Wavelength must be in ASTER VNIR region!")]
 	#[ensures(ret > 0 && ret < 10)]
 	fn aster(lamda : f64) -> u8 {
-		if lambda =< 0.6e-6 {
+		if lambda <= 0.6e-6 {
 			return 1;
 		}
 		else if lambda >= 0.63e-6 && lambda <= 0.69e-6 {
@@ -160,7 +163,7 @@ mod el_opt {
 
 	#[requires(lambda >= 4.04e-7 && lambda <= 8.85-7, "Wavelength must be in accurate OCM-2 region!")]
 	#[ensures(ret > 0 && ret < 8)]
-	fn ocm_2(lambda : f64 -> u8 {
+	fn ocm_2(lambda : f64) -> u8 {
 		if lambda >= 4.04e-07 && lambda <= 4.24e-07 {
 			return 1;
 		}
@@ -192,10 +195,10 @@ mod el_opt {
 	}
 
 	#[requires(theta > 0 && theta < 6.28, "Angle must be greater than zero and less than 2PI")]
-	#[requires(temp_a > 0 && temp_b1 > 0 && temp_b2 > 0, "All temperatures must be greater than 0")
-	#[requires(temp_b2 > temp_a == temp_b1 > temp_a)]
+	#[requires(temp_a > 0 && temp_b1 > 0 && temp_b2 > 0, "All temperatures must be greater than 0")]
+	#[requires((temp_b2 > temp_a) == (temp_b1 > temp_a))]
 	#[ensures(ret > 0)]
-	fn surface_temp(temp_b1 : f64, temp_b2 : f64, temp_a, theta : f64) -> f64 {
+	fn surface_temp(temp_b1 : f64, temp_b2 : f64, temp_a : f64, theta : f64) -> f64 {
 		let mut tau : f64 = 0.0; // Filler instantiation
 		return surface_temp_tau(temp_b1, temp_b2, temp_a, theta, tau);
 	}
@@ -217,14 +220,79 @@ mod el_opt {
 	 * We therefore compute $\tau$ using the last equation in that list and then use that to calculate $T_{b0}$.
 	 * */
 	#[requires(theta > 0 && theta < 6.28, "Angle must be greater than zero and less than 2PI")]
-	#[requires(temp_a > 0 && temp_b1 > 0 && temp_b2 > 0, "All temperatures must be greater than 0")
-	#[requires(temp_b2 > temp_a == temp_b1 > temp_a)]
+	#[requires(temp_a > 0 && temp_b1 > 0 && temp_b2 > 0, "All temperatures must be greater than 0")]
+	#[requires((temp_b2 > temp_a) == (temp_b1 > temp_a))]
 	#[ensures(ret > 0)]
-	fn surface_temp_tau(temp_b1 : f64, temp_b2 : f64, temp_a, theta : f64, tau : &mut f64) -> f64 {
+	fn surface_temp_tau(temp_b1 : f64, temp_b2 : f64, temp_a : f64, theta : f64, tau : &mut f64) -> f64 {
 		// find tau
 		tau = (1 / theta.sec()) * ((temp_b2 - temp_a) / (temp_b1 - temp_a)).ln();
 		// Used twice, so only calculate once
 		let minus_tau_exp = (-tau).exp();
 		return (temp_b1 + temp_a * (1 - minus_tau_exp)) / minus_tau_exp;
+	}
+
+	/*
+	 * Calculates average spectral radiance given $K_1$ and $K_2$, two parameters related to the
+	 * specific sensing system. Requires the surface temperature in order to do it.
+	 * */
+	#[requires(K1 > 0.0 && K2 > 0.0)]
+	#[requires(temp > 0.0)]
+	#[ensures(ret > 0.0)]
+	fn avg_spectral_radiance(K1 : f64, K2 : f64, temp : f64) -> f64 {
+		return K1 / ((K2 / T).exp() - 1.0);
+	}
+
+	/*
+	 * Calculates the Earth's surface temperature given average spectral radiance and sensing system parameters $K_1$ and $K_2$
+	 * */
+	#[requires(K1 > 0.0 && K2 > 0.0)]
+	#[requires(avg_radiance > 0.0)]
+	#[ensures(ret > 0.0)]
+	fn earth_surface_temp(K1 : f64, K2 : f64, avg_radiance : f64) -> f64 {
+		return K2 / (K1 / avg_radiance + 1).ln()
+	}
+
+	/*
+	 * Calculates thermal inertia given heat capacity, material density, and thermal conductivity
+	 * */
+	#[requires(heat_capacity > 0.0)]
+	#[requires(density > 0.0)]
+	#[requires(thermal_conductivity > 0.0)]
+	#[ensures(ret > 0.0)]
+	fn thermal_inertia(heat_capacity : f64, density : f64, thermal_conductivity : f64) -> f64 {
+		return (heat_capacity * density * thermal_conductivity).sqrt();
+	}
+
+	#[requires(heat_capacity > 0.0)]
+	#[requires(density > 0.0)]
+	#[requires(angular_frequency > 0.0)]
+	#[requires(thermal_conductivity > 0.0)]
+	#[ensures(ret > 0.0)]
+	fn thermal_wave_speed(heat_capacity : f64, density : f64, thermal_conductivity : f64, angular_frequency : f64) -> f64 {
+		return ((2.0 * thermal_conductivity * angular_frequency) / (heat_capacity * density)).sqrt();
+	}
+
+	#[requires(heat_capacity > 0.0)]
+	#[requires(density > 0.0)]
+	#[requires(thermal_conductivity > 0.0)]
+	#[ensures(ret > 0.0)]
+	fn thermal_diffusivity(heat_capacity : f64, density : f64, thermal_conductivity : f64) -> f64 {
+		return thermal_conductivity / (heat_capacity * density);
+	}
+
+	#[requires(emissivity > 0.0)]
+	#[requires(mean_temp > 0.0)]
+	#[ensures(ret > 0.0)]
+	fn upward_heat_flux_weight(mean_temp : f64, emissivity : f64) -> f64 {
+		return 4.0 * emissivity * SIGMA * mean_temp.pow(3);
+	}
+
+	#[requires(emissivity > 0.0)]
+	#[requires(mean_temp > 0.0)]
+	#[requires(temp > 0.0)]
+	#[ensures(ret > 0.0)]
+	fn upward_heat_flux(temp : f64, mean_temp : f64, emissivity : f64) -> f64 {
+		let alpha : f64 = upward_heat_flux_weight(mean_temp, emissivity);
+		return alpha * (temp - mean_temp);
 	}
 }
