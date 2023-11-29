@@ -52,6 +52,7 @@ mod tables {
 				Range { index : 7, lbound : 7.25e-07, ubound : 7.55e-07 },
 				Range { index : 8, lbound : 8.45e-07, ubound : 8.85e-07 }];
 }
+
 #[requires(wavelength > 0.0, "Wavelength must be greater than 0")]
 #[requires(d > 0.0 && d < 1.0, "Distance must be nonzero, but not too large")]
 #[ensures(ret > 0.0 && ret < 6.29)] // radians
@@ -195,6 +196,29 @@ fn ocm_2(lambda : f64) -> u8 {
 	else {
 		assert!(false, "Invalid modis wavelength");
 		return 1; // make rustc happy
+	}
+}
+
+// Untrained values for a0, a1, and a2
+// Default just averages the two
+static mut a0 : f64 = 0.0;
+static mut a1 : f64 = 0.5;
+static mut a2 : f64 = 0.5;
+
+unsafe fn surface_temp_split_window(temp_b1 : f64, temp_b2 : f64) -> f64 {
+	return a0 + a1 * temp_b1 + a2 * temp_b2
+}
+
+/*
+ * In this case, we have a vector
+ * */
+#[requires(temps_b0.len() == temps_b1.len() && temps_b1.len() == temps_b2.len())]
+unsafe fn train_split_window(temps_b0 : &[f64], temps_b1 : &[f64], temps_b2 : &[f64]) {
+	a0 = 0.0;
+	a1 = 0.0;
+	a2 = 0.0;
+	for _i in 0..temps_b0.len() {
+		// TODO
 	}
 }
 

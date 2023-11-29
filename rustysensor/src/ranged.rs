@@ -1,4 +1,5 @@
 use contracts::*;
+use crate::em::consts::*;
 
 fn travel_time(range : f64, group_velocity : f64) -> f64 {
 	return 2.0 * range / group_velocity;
@@ -29,7 +30,7 @@ fn accuracy(rise_time : f64, snr : f64) -> f64 {
 fn range_accuracy(
 	vg : f64
 	, tr_op   : Option<f64>
-	, S_op  : Option<f64>
+	, s_op  : Option<f64>
 	, v_op  : Option<f64>
 	, h_op  : Option<f64>
 	, p_op  : Option<f64>
@@ -37,12 +38,12 @@ fn range_accuracy(
 ) -> f64 {
 	// Uses the defaults for an airborne system
 	let tr : f64 = tr_op.unwrap_or(5.0e-9);
-	let S  : f64 = S_op.unwrap_or(1.0);
+	let s  : f64 = s_op.unwrap_or(1.0);
 	let v  : f64 = v_op.unwrap_or(50.0);
-	let H  : f64 = h_op.unwrap_or(200.0);
+	let h  : f64 = h_op.unwrap_or(200.0);
 	let p  : f64 = p_op.unwrap_or(1000.0);
 	let del_theta : f64 = del_theta_op.unwrap_or(0.001);
-	return vg * tr / (2.0 * S) * (v / (p * H * del_theta)).sqrt();
+	return vg * tr / (2.0 * s) * (v / (p * h * del_theta)).sqrt();
 }
 
 fn range_ambiguity(vg : f64, p_op  : Option<f64>) -> f64 {
@@ -55,7 +56,7 @@ fn longest_period(vg : f64, h_op  : Option<f64>) -> f64 {
 	return vg / 2.0 * h;
 }
 
-fn is_ideal_period(p : f64, vg : f64, h_op  : Option<f64>) -> bool {
+fn is_ideal_period(p : f64, vg : f64, h_op : Option<f64>) -> bool {
 	return p < longest_period(vg, h_op);
 }
 
@@ -66,3 +67,18 @@ fn is_ideal_period(p : f64, vg : f64, h_op  : Option<f64>) -> bool {
 // TODO
 
 // Scattered systems
+
+// most basic brdf: R = L1 / E
+fn brdf_basic(radiance : f64, irradiance : f64) -> f64 {
+	return radiance / irradiance;
+}
+// TODO: other brdf approximations
+
+fn bistatic_scattering_coefficient_basic(radiance : f64, irradiance : f64, angle : f64) -> f64 {
+	let r = brdf_basic(radiance, irradiance);
+	return bistatic_scattering_coefficient(r, angle);
+}
+
+fn bistatic_scattering_coefficient(brdf : f64, angle : f64) -> f64 {
+	return 4.0 * PI * brdf * angle.cos();
+}

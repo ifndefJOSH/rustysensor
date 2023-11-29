@@ -22,13 +22,46 @@ pub(crate) mod consts {
 	// Planck Constant
 	pub(crate) const H : f64            = 6.62607015e-34;
 	pub(crate) const H_EV : f64         = 4.135667696e-15;
+	// Electrons
+	pub(crate) const MASS_E : f64       = 9.1093837015e-31; // kg
+	pub(crate) const CHARGE_E : f64     = 1.602176634e-19;  // coulomb
 	// Earth blackbody irradiance
 	pub(crate) const EARTH_IRRAD : f64  = 1.37e3;
 	// Mean exoatmospheric irradiance
 	pub(crate) const EXOATMO_RAD : f64  = 2.02e7;
-
 }
+
+pub mod tables {
+	use crate::em::consts::*;
+	#[derive(Clone, Debug)]
+	struct Polarizability {
+		optical : f64
+		, radio : f64
+	}
+	const AIR_POLARIZABILITY : Polarizability = Polarizability{
+		optical : 21.7e-30 / EPSILON_0_SI
+		, radio : 21.4e-30 / EPSILON_0_SI
+	};
+	const CO2_POLARIZABILITY : Polarizability = Polarizability{
+		optical : 33.6e-30 / EPSILON_0_SI
+		, radio : 36.8e-30 / EPSILON_0_SI
+	};
+	const HYDROGEN_POLARIZABILITY : Polarizability = Polarizability{
+		optical : 9.8e-30 / EPSILON_0_SI
+		, radio : 10.1e-30 / EPSILON_0_SI
+	};
+	const OXYGEN_POLARIZABILITY : Polarizability = Polarizability{
+		optical : 20.2e-30 / EPSILON_0_SI
+		, radio : 19.8e-30 / EPSILON_0_SI
+	};
+	const H20_VAPOR_POLARIZABILITY : Polarizability = Polarizability{
+		optical : 18.9e-30 / EPSILON_0_SI
+		, radio : 368.0e-30 / EPSILON_0_SI
+	};
+}
+
 use crate::em::consts::*;
+
 #[requires(f > 0.0, "Frequency must be greater than zero Hz!")]
 #[ensures(ret > 0.0)]
 #[debug_ensures(ret == f * 2.0 * PI)]
@@ -134,12 +167,76 @@ fn bb_radiation(temp : f64) -> f64 {
 // * */
 // TODO
 
-// TODO: Fraunhofer diffraction
+// Fraunhofer diffraction
+// Note: Fraunhofer diffraction just requires fft
+// Also, for some window, w,
+fn windowed_fraunhofer_diffraction(wnum : f64, window : f64, theta : f64) -> f64 {
+	let sinc_arg = wnum * window * theta.sin() / 2.0;
+	let sinc = sinc_arg.sin() / sinc_arg;
+	return sinc;
+}
 
 // ===================== EM radiation interacting with matter =====================
+fn electric_permeability(ratio : f64) -> f64 {
+	return ratio * EPSILON_0_SI;
+}
 
+fn magnetic_permeability(ratio : f64) -> f64 {
+	return ratio * MU_0;
+}
+
+// Gets the ratio of the magnitudes of (90 degree phase) E field vs B field
+// in homogenous materials
+fn homogeneous_material_eb_ratio(e_ratio : f64, mu_ratio : f64) -> f64 {
+	return C / (e_ratio * mu_ratio).sqrt();
+}
+
+fn refractive_index(e_ratio : f64, mu_ratio : f64) -> f64 {
+	return (e_ratio * mu_ratio).sqrt();
+}
+
+fn absorption_length(angular_frequency : f64, k : f64) -> f64 {
+	return C / (2.0 *  angular_frequency * k);
+}
+
+// At radio frequencies
+fn metal_absorption_length(angular_frequency : f64, conductivity : f64) -> f64 {
+	return C * (EPSILON_0_SI / (2.0 * conductivity * angular_frequency)).sqrt();
+}
+
+fn gas_dielectric_constant(num_density : u32, polarizability : f64) -> f64 {
+	return 1.0 + (num_density as f64 * polarizability) / EPSILON_0_SI;
+}
+
+fn gas_refractive_index(num_density : u32, polarizability : f64) -> f64 {
+	return 1.0 + (num_density as f64 * polarizability) / (2.0 * EPSILON_0_SI);
+}
+
+fn metal_dielectric_tau(N : u32, conductivity : f64) -> f64 {
+	return MASS_E * conductivity / (N as f64 * CHARGE_E.powi(2));
+}
+
+fn metal_dielectric_real(conductivity : f64, angular_frequency : f64, num_density : u32) -> f64 {
+	let tau : f64 = metal_dielectric_tau(num_density, conductivity);
+	return 1.0 - (conductivity * tau) / (EPSILON_0_SI * (1.0 + angular_frequency.powi(2) * tau.powi(2)));
+}
+
+fn metal_dielectric_imag(conductivity : f64, angular_frequency : f64, num_density : u32) -> f64 {
+	let tau : f64 = metal_dielectric_tau(num_density, conductivity);
+	let denom = EPSILON_0_SI * angular_frequency * (1.0 + angular_frequency.powi(2) * tau.powi(2));
+	return conductivity / denom;
+}
+
+// The EM frequency at which a plasma becomes transparent
+fn plasma_transparency_frequency(num_density : u32) -> f64 {
+	let angular = (num_density as f64 * CHARGE_E / (EPSILON_0_SI * MASS_E)).sqrt();
+	return angular / (2.0 * PI);
+}
+
+// Snell's law
+fn exit_angle(entry_angle : f64, current_refractive : f64, new_refractive : f64) -> f64 {
+	return (current_refractive * entry_angle.sin() / new_refractive).asin();
+}
 
 // ===================== EM radiation interacting with Earths atmosphere =====================
 
-
-// }
