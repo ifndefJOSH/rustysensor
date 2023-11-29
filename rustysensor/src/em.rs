@@ -1,8 +1,9 @@
 use contracts::*;
 // ===================== Basic EM in free space =====================
 
-mod em {
+// mod em {
 	use super::*;
+	use core::f64::consts::PI;
 	mod consts {
 		use super::*;
 		// ===================== Constants =====================
@@ -15,7 +16,7 @@ mod em {
 		const Z0 : f64           = (MU_0 / EPSILON_0_SI).sqrt();
 		const Z0_EV : f64        = (MU_0 / EPSILON_0_EV).sqrt();
 		// Other math constants
-		const PI : f64           = 3.141592653589793;
+		// const PI : f64           = 3.141592653589793;
 		// Boltzmann constant
 		const K : f64            = 1.380649e-23;
 		const SIGMA : f64        = 5.670367e-8;
@@ -31,53 +32,53 @@ mod em {
 		const EXOATMO_RAD : f64  = 2.02e7;
 
 	}
-	use consts::*;
-	#[requires(f > 0, "Frequency must be greater than zero Hz!")]
-	#[ensures(ret > 0)]
-	#[debug_ensures(ret == f * 2 * PI)]
+	use em::consts::*;
+	#[requires(f > 0.0, "Frequency must be greater than zero Hz!")]
+	#[ensures(ret > 0.0)]
+	#[debug_ensures(ret == f * 2.0 * PI)]
 	fn angular_frequency(f : f64) -> f64 {
-		return f * 2 * PI;
+		return f * 2.0 * PI;
 	}
 
-	#[requires(f > 0, "Frequency must be greater than zero Hz!")]
-	#[ensures(ret > 0)]
+	#[requires(f > 0.0, "Frequency must be greater than zero Hz!")]
+	#[ensures(ret > 0.0)]
 	#[debug_ensures(ret == C / f)]
 	fn em_wavelength(f : f64) -> f64 {
 		return C / f;
 	}
 
-	#[requires(lambda > 0, "Wavelength must be greater than zero!")]
-	#[ensures(ret > 0)]
+	#[requires(lambda > 0.0, "Wavelength must be greater than zero!")]
+	#[ensures(ret > 0.0)]
 	#[debug_ensures(ret == C / lambda)]
 	fn em_frequency(lambda : f64) -> f64 {
 		return C / lambda;
 	}
 
-	#[requires(lambda > 0, "Wavelength must be greater than zero!")]
+	#[requires(lambda > 0.0, "Wavelength must be greater than zero!")]
 	fn wave_num(lambda : f64) -> u64 {
-		return (2 * PI / lambda) as u64;
+		return (2.0 * PI / lambda) as u64;
 	}
 
-	#[requires(f > 0, "Frequency must be greater than zero!")]
-	#[ensures(ret > 0)]
+	#[requires(f > 0.0, "Frequency must be greater than zero!")]
+	#[ensures(ret > 0.0)]
 	fn photon_energy(f : f64) -> f64 {
 		return H * f;
 	}
 
 	// We can have negative amplitudes as amplitudes are squared
-	#[ensures(ret > 0)]
+	#[ensures(ret > 0.0)]
 	fn flux_density(amplitude : f64) -> f64 {
-		return amplitude.pow(2) / (2 * Z0);
+		return amplitude.powi(2) / (2.0 * Z0);
 	}
 
 	// TODO: stokes vector
 
-	#[requires(velocity >= 0, "Velocity must be greater than or equal to zero! (m/s)")]
+	#[requires(velocity >= 0.0, "Velocity must be greater than or equal to zero! (m/s)")]
 	#[requires(velocity < C, "You cannot go the speed of light!")]
-	#[requires(angle > 0 && angle < 2 * PI, "Angle (in radians) must be between 0 and 2PI")]
-	#[ensures(ret > 0)]
+	#[requires(angle > 0.0 && angle < 2.0 * PI, "Angle (in radians) must be between 0 and 2PI")]
+	#[ensures(ret > 0.0)]
 	fn doppler_ratio(velocity : f64, angle : f64) -> f64 {
-		return (1 - velocity.pow(2) / C.pow(2)) / (1 - velocity * angle.cos() / C).sqrt();
+		return (1.0 - velocity.powi(2) / C.powi(2)) / (1.0 - velocity * angle.cos() / C).sqrt();
 	}
 
 	/**
@@ -85,18 +86,18 @@ mod em {
 	* the incoming or outgoing L values. If Lincoming, returns the irradiance,
 	* if Loutgoing then returns the radiant exitance
 	* */
-	#[requires(theta > 0 && theta < 2 * PI, "Angle must be valid radial angle (rad)")]
-	#[requires(step.unwrap_or(0.01) > 0, "Cannot have zero or negative step for numerical integration.")]
-	#[ensures(ret > 0)]
+	#[requires(theta > 0.0 && theta < 2.0 * PI, "Angle must be valid radial angle (rad)")]
+	#[requires(step.unwrap_or(0.01) > 0.0, "Cannot have zero or negative step for numerical integration.")]
+	#[ensures(ret > 0.0)]
 	fn irradiance(L : &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
 		let s : f64 = step.unwrap_or(0.01);
 		// Size of square for integration
-		let s2 : f64 = s.pow(2);
+		let s2 : f64 = s.powi(2);
 		let mut sum : f64 = 0.0;
 		let mut theta : f64 = 0.0;
 		let mut phi : f64 = 0.0;
-		while theta < PI / 2 {
-			while phi < 2 * PI {
+		while theta < PI / 2.0 {
+			while phi < 2.0 * PI {
 				sum += s2 * L(theta, phi) * theta.cos() * theta.sin();
 				phi += s;
 			}
@@ -108,29 +109,29 @@ mod em {
 	/**
 	* Computes L_f (the spectral radiance) using the Rayleigh-Jeans approximation
 	* */
-	#[requires(temp > 0, "Cannot have zero or negative temperature (K)")]
-	#[requires(wavelength > 0, "Cannot have zero or negative wavelength (m)")]
+	#[requires(temp > 0.0, "Cannot have zero or negative temperature (K)")]
+	#[requires(wavelength > 0.0, "Cannot have zero or negative wavelength (m)")]
 	fn spectral_radiance_f(temp : f64, f : f64) -> f64 {
-		return 2 * K * temp / wavelength.pow(2);
+		return 2.0 * K * temp / wavelength.powi(2);
 	}
 
 	/**
 	* Computes L_lambda using Rayleigh-Jeans approximation
 	* */
-	#[requires(temp > 0, "Cannot have zero or negative temperature (K)")]
-	#[requires(wavelength > 0, "Cannot have zero or negative wavelength (m)")]
-	#[ensures(ret > 0)]
+	#[requires(temp > 0.0, "Cannot have zero or negative temperature (K)")]
+	#[requires(wavelength > 0.0, "Cannot have zero or negative wavelength (m)")]
+	#[ensures(ret > 0.0)]
 	fn spectral_radiance_lambda(temp : f64, wavelength : f64) -> f64 {
-		return 2 * K * temp * C / wavelength.pow(4);
+		return 2.0 * K * temp * C / wavelength.powi(4);
 	}
 
 	/**
 	* Computes total black body radiance
 	* */
-	#[requires(temp > 0, "Cannot have negative or absolute zero temperature!")]
-	#[ensures(ret > 0)]
+	#[requires(temp > 0.0, "Cannot have negative or absolute zero temperature!")]
+	#[ensures(ret > 0.0)]
 	fn bb_radiation(temp : f64) -> f64 {
-		return SIGMA * temp.pow(4);
+		return SIGMA * temp.powi(4);
 	}
 
 	// /**
@@ -146,4 +147,4 @@ mod em {
 	// ===================== EM radiation interacting with Earths atmosphere =====================
 
 
-}
+// }

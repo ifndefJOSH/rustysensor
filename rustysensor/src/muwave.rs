@@ -2,42 +2,53 @@ use contracts::*;
 // ===================== Passive Microwave Systems =====================
 
 mod muwave {
+	use contracts::*;
 	// use em::consts::*;
 
+	/*
+	 * Antenna types supported by this library
+	 * */
+	#[derive(PartialEq)]
 	enum AntennaType {
-		Monopole
-		, ShortDipole
-		, HalfWaveDipole
-		, YagiYudaSix
-		, Rectangular
-		, Parabaloid // (Circular paraboloid)
+		Monopole          // A simple monopole antenna
+		, ShortDipole     // A short dipole antenna
+		, HalfWaveDipole  // A dipole antenna whose size is half the operating wavelength
+		, YagiYudaSix     // A Yagi-Yuda antenna with six horizontal rods
+		, Rectangular     // A rectangular-shaped antenna
+		, Parabaloid      // A Circular paraboloid antenna
 	}
 
 	mod instruments {
+		// Polarization types
+		//     H: Horizontally polarized
+		//     V: Vertically polarized
+		//     R: Right polarized
+		//     L: Left polarized
+		#[derive(Copy, Clone)]
 		enum Polarization {
 			H, V, R, L
 		}
 
 		#[derive(Copy, Clone)]
 		struct Band {
-			f_min : f64    // frequency min (GHz)
-			, f_max : f64  // frequency max (GHz)
-			, b : f64      // bandwidth (MHz)
-			, p : Polarization
-			, delta_t : f64 // Temp differential (Kelvin)
-			, res_x : u16   // Resolution horizontal (km)
-			, res_y : u16   // Resolution vertical (km)
+			f_min : f64          // frequency min (GHz)
+			, f_max : f64        // frequency max (GHz)
+			, b : f64            // bandwidth (MHz)
+			, p : Polarization   // Polarization direction
+			, delta_t : f64      // Temp differential (Kelvin)
+			, res_x : u16        // Resolution horizontal (km)
+			, res_y : u16        // Resolution vertical (km)
 		}
 
 		#[derive(Copy, Clone)]
 		struct Channel {
 			channel : u8
-			, f_min : f64  // frequency min (GHz)
-			, f_max : f64  // frequency max (GHz)
-			, b : f64      // bandwidth (MHz)
-			, p : Polarization
-			, bands : u8   // band count
-			, delta_t : f64 // Temp differential (Kelvin)
+			, f_min : f64       // frequency min (GHz)
+			, f_max : f64       // frequency max (GHz)
+			, b : f64           // bandwidth (MHz)
+			, p : Polarization  // Polarization direction
+			, bands : u8        // band count
+			, delta_t : f64     // Temp differential (Kelvin)
 		}
 
 		// TODO: SSMIS and MSMR tables
@@ -46,6 +57,9 @@ mod muwave {
 	/*
 	 * Computes the Johnson/Nyquist noise power of an antenna
 	 * */
+	#[requires(antenna_temp > 0.0)]
+	#[requires(band_size > 0.0)]
+	#[ensures(ret > 0.0)]
 	fn jnoise_power(antenna_temp : f64, band_size : f64) -> f64 {
 		return K * antenna_temp * band_size;
 	}
@@ -78,10 +92,10 @@ mod muwave {
 	 * Computes the directivity given beam solid angle
 	 * bsa: Beam solid angle
 	 * */
-	#[requires(bsa >= 0 && bsa <= 6.29)]
+	#[requires(bsa >= 0.0 && bsa <= 6.29)]
 	#[ensures(ret <= 2.0 && ret >= 0.0)]
 	fn directivity(bsa : f64) -> f64 {
-		return 4 * PI / bsa;
+		return 4.0 * PI / bsa;
 	}
 
 	/**
@@ -93,8 +107,8 @@ mod muwave {
 		let mut sum : f64 = 0.0;
 		let mut theta : f64 = 0.0;
 		let mut phi : f64 = 0.0;
-		while theta < PI / 2 {
-			while phi < 2 * PI {
+		while theta < PI / 2.0 {
+			while phi < 2.0 * PI {
 				sum += P(theta, phi);
 				phi += s;
 			}
@@ -113,8 +127,8 @@ mod muwave {
 		let mut sum : f64 = 0.0;
 		let mut theta : f64 = 0.0;
 		let mut phi : f64 = 0.0;
-		while theta < PI / 2 {
-			while phi < 2 * PI {
+		while theta < PI / 2.0 {
+			while phi < 2.0 * PI {
 				sum += TB(theta, phi) * P(theta, phi);
 				phi += s;
 			}
@@ -128,40 +142,40 @@ mod muwave {
 	 * */
 	fn forward_gain(efficiency : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
 		// Directivity
-		let d = 4 * PI / beam_solid_angle(P);
+		let d = 4.0 * PI / beam_solid_angle(P, None);
 		return efficiency * d;
 	}
 
 	/**
 	 * Computes spectral radiance given temperature and wavelength
 	 * */
-	fn spectral_radiance(tb : f64, wavelength : f64) {
-		return 2 * K * tb / wavelength.pow(2);
+	fn spectral_radiance(tb : f64, wavelength : f64) -> f64{
+		return 2.0 * K * tb / wavelength.powi(2);
 	}
 
 	/**
 	 * Computes spectral flux density
 	 * */
 	fn spectral_flux_density(tb : f64, wavelength : f64, small_angle : f64) -> f64 {
-		return 2 * K * tb * small_angle / wavelength.pow(2);
+		return 2.0 * K * tb * small_angle / wavelength.powi(2);
 	}
 
 	/**
 	 * Computes the effective area of an antenna
 	 * */
 	fn effective_area(wavelength : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
-		let bsa = beam_solid_angle(P);
-		return wavelength.pow(2) / bsa;
+		let bsa = beam_solid_angle(P, None);
+		return wavelength.powi(2) / bsa;
 	}
 
 	/**
 	 * Computes antenna sensitivity ($\Delta T$)
 	 * */
 	fn sensitivity(sys_temp : f64, C : Option<f64>, del_t : Option<f64>, del_f : Option<f64>) -> f64 {
-		let c_val = C.unwrap_or(5);
+		let c_val = C.unwrap_or(5.0);
 		let d_t = del_t.unwrap_or(0.01);
 		let d_f = del_f.unwrap_or(0.01);
-		return C * sys_temp / (d_t * d_f).sqrt();
+		return c_val * sys_temp / (d_t * d_f).sqrt();
 	}
 
 	/**
@@ -189,7 +203,7 @@ mod muwave {
 	 * Computes upwelling component ($T_b$) of temperature through atmosphere.
 	 * */
 	fn upwelling_component(tau : f64, T : &dyn Fn(f64) -> f64) -> f64 {
-		return T(1 - (-tau).exp());
+		return T(1.0 - (-tau).exp());
 	}
 
 }

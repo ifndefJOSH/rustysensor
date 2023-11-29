@@ -51,16 +51,16 @@ mod el_opt {
 					Range { index : 7, lbound : 7.25e-07, ubound : 7.55e-07 },
 					Range { index : 8, lbound : 8.45e-07, ubound : 8.85e-07 }];
 	}
-	#[requires(wavelength > 0, "Wavelength must be greater than 0")]
-	#[requires(d > 0 && d < 1, "Distance must be nonzero, but not too large")]
-	#[ensures(ret > 0 && ret < 6.29)] // radians
+	#[requires(wavelength > 0.0, "Wavelength must be greater than 0")]
+	#[requires(d > 0.0 && d < 1.0, "Distance must be nonzero, but not too large")]
+	#[ensures(ret > 0.0 && ret < 6.29)] // radians
 	fn diffraction_angle(n : u32, wavelength : f64, d : f64) -> f64 {
 		return ((n as f64) * wavelength / d).asin();
 	}
 
 	#[requires(lambda >= 0.52e-6 && lambda <= 2.43e-6, "Wavelength must be in ASTER VNIR region!")]
 	#[ensures(ret > 0 && ret < 10)]
-	fn aster(lamda : f64) -> u8 {
+	fn aster(lambda : f64) -> u8 {
 		if lambda <= 0.6e-6 {
 			return 1;
 		}
@@ -197,13 +197,13 @@ mod el_opt {
 		}
 	}
 
-	#[requires(theta > 0 && theta < 6.28, "Angle must be greater than zero and less than 2PI")]
-	#[requires(temp_a > 0 && temp_b1 > 0 && temp_b2 > 0, "All temperatures must be greater than 0")]
+	#[requires(theta > 0.0 && theta < 6.28, "Angle must be greater than zero and less than 2PI")]
+	#[requires(temp_a > 0.0 && temp_b1 > 0.0 && temp_b2 > 0.0, "All temperatures must be greater than 0")]
 	#[requires((temp_b2 > temp_a) == (temp_b1 > temp_a))]
-	#[ensures(ret > 0)]
+	#[ensures(ret > 0.0)]
 	fn surface_temp(temp_b1 : f64, temp_b2 : f64, temp_a : f64, theta : f64) -> f64 {
 		let mut tau : f64 = 0.0; // Filler instantiation
-		return surface_temp_tau(temp_b1, temp_b2, temp_a, theta, tau);
+		return surface_temp_tau(temp_b1, temp_b2, temp_a, theta, &mut tau);
 	}
 
 	/*
@@ -218,20 +218,21 @@ mod el_opt {
 	 *     T_{b0} &= \frac{T_{b2} - T_A(1 - \exp(-\tau\sec(\theta))}{\exp(-\tau\sec(\theta)} = \frac{T_{b1} - T_A(1 - \exp(-\tau))}{\exp(-\tau)} \\
 	 *     \frac{T_{b2} - T_A}{\exp(-\tau\sec{\theta}} + T_A =  \frac{T_{b1} - T_A}{\exp(-\tau} + T_A \\
 	 *      \ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right) &= \tau\sec(\theta) \\
-	 *      \tau &= \frac{1}{\sec \theta}\ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right)
+	 *      \tau &= \frac{1}{\sec \theta}\ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right) \\
+	 *      \tau &= \cos \theta \ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right)
 	 * \end{align*}
 	 * We therefore compute $\tau$ using the last equation in that list and then use that to calculate $T_{b0}$.
 	 * */
-	#[requires(theta > 0 && theta < 6.28, "Angle must be greater than zero and less than 2PI")]
-	#[requires(temp_a > 0 && temp_b1 > 0 && temp_b2 > 0, "All temperatures must be greater than 0")]
+	#[requires(theta > 0.0 && theta < 6.28, "Angle must be greater than zero and less than 2PI")]
+	#[requires(temp_a > 0.0 && temp_b1 > 0.0 && temp_b2 > 0.0, "All temperatures must be greater than 0")]
 	#[requires((temp_b2 > temp_a) == (temp_b1 > temp_a))]
-	#[ensures(ret > 0)]
+	#[ensures(ret > 0.0)]
 	fn surface_temp_tau(temp_b1 : f64, temp_b2 : f64, temp_a : f64, theta : f64, tau : &mut f64) -> f64 {
 		// find tau
-		tau = (1 / theta.sec()) * ((temp_b2 - temp_a) / (temp_b1 - temp_a)).ln();
+		*tau = (theta.cos()) * ((temp_b2 - temp_a) / (temp_b1 - temp_a)).ln();
 		// Used twice, so only calculate once
-		let minus_tau_exp = (-tau).exp();
-		return (temp_b1 + temp_a * (1 - minus_tau_exp)) / minus_tau_exp;
+		let minus_tau_exp = (0.0 - *tau).exp();
+		return (temp_b1 + temp_a * (1.0 - minus_tau_exp)) / minus_tau_exp;
 	}
 
 	/*
@@ -252,7 +253,7 @@ mod el_opt {
 	#[requires(avg_radiance > 0.0)]
 	#[ensures(ret > 0.0)]
 	fn earth_surface_temp(K1 : f64, K2 : f64, avg_radiance : f64) -> f64 {
-		return K2 / (K1 / avg_radiance + 1).ln()
+		return K2 / (K1 / avg_radiance + 1.0).ln()
 	}
 
 	/*
@@ -297,7 +298,7 @@ mod el_opt {
 	#[requires(mean_temp > 0.0)]
 	#[ensures(ret > 0.0)]
 	fn upward_heat_flux_weight(mean_temp : f64, emissivity : f64) -> f64 {
-		return 4.0 * emissivity * SIGMA * mean_temp.pow(3);
+		return 4.0 * emissivity * SIGMA * mean_temp.powi(3);
 	}
 
 	/*
@@ -312,4 +313,7 @@ mod el_opt {
 		let alpha : f64 = upward_heat_flux_weight(mean_temp, emissivity);
 		return alpha * (temp - mean_temp);
 	}
+
+	// TODO: split window technique
+	// TODO: Hosek-Wilkie and Preetham
 }
