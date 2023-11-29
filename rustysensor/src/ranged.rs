@@ -58,7 +58,7 @@ fn accuracy(rise_time : f64, snr : f64) -> f64 {
 
 fn range_accuracy(
 	vg : f64
-	, tr_op   : Option<f64>
+	, tr_op : Option<f64>
 	, s_op  : Option<f64>
 	, v_op  : Option<f64>
 	, h_op  : Option<f64>

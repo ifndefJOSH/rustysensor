@@ -177,7 +177,7 @@ fn irradiance(L : &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
 	let mut phi : f64 = 0.0;
 	while theta < PI / 2.0 {
 		while phi < 2.0 * PI {
-			sum += s2 * L(theta, phi) * theta.cos() * theta.sin();
+			sum += s2 * L(theta, phi) * theta.cos() * theta.sin() * s2;
 			phi += s;
 		}
 		theta += s;
