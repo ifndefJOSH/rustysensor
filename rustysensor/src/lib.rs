@@ -1,3 +1,75 @@
+//! `rustysensor` is a crate which provides functionality related to remote sensing applications
+//! with a particular focus on embedded systems, accuracy, and electromagnetic sensing. It implements
+//! a number of approximations, formulas, and methods used widely by sensing applications.
+//!
+//! It is split into five sub modules: `em`, `el_opt`, `muwave`, `photographic`, and `ranged`. These
+//! delineate functionality and contain functions and constants related to those particular fields.
+//!
+//! # The Electromagnetic Module
+//!
+//! The `em` module of the library contains functions, constants, and other elements
+//! useful in applications sensing generally via the electromagnetic
+//! spectrum. This includes spectral and blackbody radiance, and the doppler
+//! effect, as well as basic functions for angular frequency,
+//! electromagnetic wavelength, and photon energy.
+//!
+//! The purpose of this portion of the library is to provide general
+//! functionality with regards to the electromagnetic spectrum. Much of
+//! remote sensing is based on EM radiation, and so this portion of the
+//! library is fundamental to much of the rest of it, and therefore is the
+//! first one included.
+//!
+//! # The Electro-Optical Module
+//!
+//! The `el_opt` portion of the library similarly expands on the electromagnetic section
+//! by introducing functions useful when sensing optically. This includes
+//! some near-IR and infrared sensing systems. However, in this section we
+//! also focus in large part on TIR (temperature IR) systems.
+//!
+//! The reason this section (as well as many of the other sections here) is
+//! included in the library is to focus on a more specific portion of the
+//! electromagnetic spectrum which is useful to many systems. However, many
+//! of the elements included in this section are still quite general-purpose
+//! and can be used in a wide variety of EM-related applications
+//!
+//! # The Photographic Systems Module
+//!
+//! The `photographic` portion of the library is designed to focus on visible light and near-IR
+//! bands in the electromagnetic spectrum. Photographic systems are
+//! extremely important since nearly all life uses these bands of the EM
+//! spectrum, partially because of the intensity at which our sun emits
+//! them. Some of humanity's first artificial "remote sensing" systems
+//! (cameras) utilized this band of the electromagnetic spectrum as well.
+//!
+//! Additionally, we include in this section functionality related to
+//! portions of the infrared spectrum closest to visible light, as that
+//! still falls under a "photographic" system. The purpose for this is that
+//! many systems do not necessarily follow the sensitivity spectrum of the
+//! human eye.
+//!
+//! # The Passive Microwave Module
+//!
+//! The `muwave` portion of the library specifically focuses on remote sensing
+//! applications in the microwave band of the electromagnetic spectrum and
+//! passive sensing. This includes functions which work with passive
+//! antennas and any system which works in the microwave section of the
+//! electromagnetic spectrum.
+//!
+//! It currently has no submodules or anything else beyond what is in that
+//! module, but again, like the rest of the library, is structured to allow
+//! for expansion.
+//!
+//! # The Scattering and Ranged Systems Module
+//!
+//! This portion of the library includes functionality for any and all system
+//! which is active, ranged, or must pass through a medium which scatters
+//! it. Therefore there is functionality in this section related to
+//! scattering coefficients, backscattering, and the power pattern of an
+//! active antenna. This functionality is included in a module called
+//! `ranged`.
+//!
+
+
 /*
 
 rustysensor: a remote sensing library written in pure Rust
@@ -38,11 +110,6 @@ pub mod photographic;
 /// The ranged and scattered systems modules
 pub mod ranged;
 
-/// # RustySensor
-///
-/// `rustysensor` is a crate which provides functionality related to remote sensing applications
-/// with a particular focus on embedded systems, accuracy, and electromagnetic sensing. It implements
-/// a number of approximations, formulas, and methods used widely by sensing applications.
 
 #[cfg(test)]
 mod tests {

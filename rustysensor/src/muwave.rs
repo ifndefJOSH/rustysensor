@@ -86,7 +86,7 @@ pub mod instruments {
 	// SSMIS and MSMR tables
 	/// Characteristic SSMIS bands. Channels 0-4 are most often used for Earth's
 	/// surface and can also be used for SSM/I instruments.
-	const ssmis : [Band; 24] = [
+	pub const ssmis : [Band; 24] = [
 		Band{ f_min : 19.35, f_max : 19.35, b : 355.0, p : Polarization::H, delta_t : 0.35, res_x : 73, res_y : 47 }
 		, Band{ f_min : 19.35, f_max : 19.35, b : 357.0, p : Polarization::V, delta_t : 0.35, res_x : 73, res_y : 47 }
 		, Band{ f_min : 22.235, f_max : 22.235, b : 401.0, p : Polarization::V, delta_t : 0.45, res_x : 73, res_y : 47 }
@@ -113,7 +113,7 @@ pub mod instruments {
 		, Band{ f_min : 176.711, f_max : 189.911, b : 1526.0, p : Polarization::H, delta_t : 0.56, res_x : 14, res_y : 13 }];
 
 	/// MSMR instrument bands
-	const msmr : [Band; 4] = [
+	pub const msmr : [Band; 4] = [
 		Band{ f_min : 6.6, f_max : 6.6, b : 350.0, p : Polarization::VH, delta_t : 1.0, res_x : 105, res_y : 68 }
 		, Band{ f_min : 10.65, f_max : 10.65, b : 100.0, p : Polarization::VH, delta_t : 1.0, res_x : 66, res_y : 43 }
 		, Band{ f_min : 18.0, f_max : 6.6, b : 200.0, p : Polarization::VH, delta_t : 1.0, res_x : 40, res_y : 26 }
@@ -123,6 +123,8 @@ pub mod instruments {
 }
 
 /// Computes the Johnson/Nyquist noise power of an antenna
+/// Takes: `antenna_temp`: The temperature of the antenna
+///        `band_size` : The bandwidth used by the antenna
 #[requires(antenna_temp > 0.0)]
 #[requires(band_size > 0.0)]
 #[ensures(ret > 0.0)]
@@ -153,7 +155,7 @@ pub fn hpbw(lambda : f64, size : f64, atype : AntennaType) -> f64 {
 }
 
 /// Computes the directivity given beam solid angle
-/// bsa: Beam solid angle
+/// Takes: `bsa`, the beam solid angle
 #[requires(bsa >= 0.0 && bsa <= 6.29)]
 #[ensures(ret <= 2.0 && ret >= 0.0)]
 pub fn directivity(bsa : f64) -> f64 {
@@ -161,6 +163,8 @@ pub fn directivity(bsa : f64) -> f64 {
 }
 
 /// Computes beam solid angle from power pattern via numerical integration
+/// Takes: `P` a dynamic function taking $\theta$ and $\phi$ in radians in that order and providing the power pattern's value at that angle.
+///        `step` the step for numerical integration (if `None` is passed in, defaults to `0.01`)
 pub fn beam_solid_angle(P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
 	let s : f64 = step.unwrap_or(0.01);
 	// Size of square for integration
@@ -177,7 +181,6 @@ pub fn beam_solid_angle(P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 
 	}
 	return sum;
 }
-
 
 /// Computes antenna temperature via numerical integration
 pub fn antenna_temp(TB: &dyn Fn(f64, f64) -> f64, P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
