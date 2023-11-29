@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["aster","avg_spectral_radiance","diffraction_angle","earth_surface_temp","modis","ocm_2","surface_temp","surface_temp_split_window","surface_temp_tau","thermal_diffusivity","thermal_inertia","thermal_wave_speed","train_split_window","upward_heat_flux","upward_heat_flux_weight"]};

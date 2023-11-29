@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AntennaType"],"fn":["antenna_temp","beam_solid_angle","directivity","effective_area","forward_gain","gradient_ratio","hpbw","jnoise_power","polarization_ratio","sensitivity","spectral_flux_density","spectral_radiance","upwelling_component","xpgr"],"mod":["instruments"]};

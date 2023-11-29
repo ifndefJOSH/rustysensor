@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["actual_dist","dist_res","film_illuminance","focal_len","ground_dist","image_location","modulation","principle_point_distance","radial_distort","relief_displacement"]};

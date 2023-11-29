@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["accuracy","averaging_rms_snr","bistatic_scattering_coefficient","bistatic_scattering_coefficient_basic","brdf_basic","is_ideal_period","longest_period","range_accuracy","range_ambiguity","travel_time"]};

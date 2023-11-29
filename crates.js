@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["assume","contracts","proc_macro2","quote","rustysensor","syn","unicode_ident"];

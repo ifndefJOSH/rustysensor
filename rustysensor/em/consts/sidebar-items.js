@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["C","CHARGE_E","EARTH_IRRAD","EPSILON_0_EV","EPSILON_0_SI","EXOATMO_RAD","H","H_EV","K","K_E_EV","K_E_SI","MASS_E","MU_0","PI","SIGMA","Z0","Z0_EV"]};

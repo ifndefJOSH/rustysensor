@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A macro for stating unsafe assumptions in Rust."><title>assume - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="assume" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0 (79e9716c9 2023-11-13)" data-channel="1.74.0" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../assume/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a></nav><nav class="sidebar"><a class="logo-container" href="../assume/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Crate assume</a></h2><div class="sidebar-elems"><ul class="block"><li class="version">Version 0.5.0</li><li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#macros">Macros</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">assume</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/assume/lib.rs.html#1-300">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A macro for stating unsafe assumptions in Rust.</p>
+<p>Using this macro, one can supply assumptions to the compiler for use in optimization.
+These assumptions are checked in <code>debug_assertion</code> configurations, and are unchecked
+(but still present) otherwise.</p>
+<p>This is an inherently unsafe operation. It lives in the space between regular <code>assert!</code>
+and pure <code>unsafe</code> accesses - it relies heavily on an optimizing compiler’s ability to
+track unreachable paths to eliminate unnecessary asserts.</p>
+<h2 id="examples"><a href="#examples">Examples:</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>assume::assume;
+
+<span class="kw">let </span>v = <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
+
+<span class="comment">// Some computed index that, per invariants, is always in bounds.
+</span><span class="kw">let </span>i = get_index();
+
+<span class="macro">assume!</span>(
+    <span class="kw">unsafe</span>: i &lt; v.len(),
+    <span class="string">&quot;index {} is beyond vec length {}&quot;</span>,
+    i,
+    v.len(),
+);
+<span class="kw">let </span>element = v[i];  <span class="comment">// Bounds check optimized out per assumption.</span></code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>assume::assume;
+
+<span class="kw">let </span>items: HashMap&lt;u32, String&gt; = populate_items();
+
+<span class="comment">// Some item that, per invariants, always exists.
+</span><span class="kw">let </span>item_zero_opt: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>String&gt; = items.get(<span class="kw-2">&amp;</span><span class="number">0</span>);
+
+<span class="macro">assume!</span>(
+    <span class="kw">unsafe</span>: item_zero_opt.is_some(),
+    <span class="string">&quot;item zero missing from items map&quot;</span>,
+);
+<span class="kw">let </span>item_zero = item_zero_opt.unwrap();  <span class="comment">// Panic check optimized out per assumption.</span></code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>assume::assume;
+
+<span class="kw">enum </span>Choices {
+    This,
+    That,
+    Other,
+}
+
+<span class="comment">// Some choice that, per invariants, is never Other.
+</span><span class="kw">let </span>choice = get_choice();
+
+<span class="kw">match </span>choice {
+    Choices::This =&gt; { <span class="comment">/* ... */ </span>},
+    Choices::That =&gt; { <span class="comment">/* ... */ </span>},
+    Choices::Other =&gt; {
+        <span class="comment">// This case optimized out entirely, no panic emitted.
+        </span><span class="macro">assume!</span>(
+            <span class="kw">unsafe</span>: @unreachable,
+            <span class="string">&quot;choice was other&quot;</span>,
+        );
+    },
+}</code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>assume::assume;
+
+<span class="attr">#[inline(always)]
+</span><span class="kw">fn </span>compute_value() -&gt; usize {
+    <span class="kw">let </span>result = compute_value_internal();
+
+    <span class="comment">// Can also be used to provide hints to the caller,
+    // after the optimizer inlines this assumption.
+    </span><span class="macro">assume!</span>(
+        <span class="kw">unsafe</span>: result &lt; <span class="number">12</span>,
+        <span class="string">&quot;result is invalid: {}&quot;</span>,
+        result,
+    );
+    result
+}
+
+<span class="kw">fn </span>compute_value_internal() -&gt; usize {
+    <span class="comment">/* ... */
+</span>}
+
+<span class="kw">fn </span>process_data(data: <span class="kw-2">&amp;</span>[f64; <span class="number">100</span>]) {
+    <span class="comment">// Bounds check elided per implementation&#39;s assumption.
+    </span><span class="kw">let </span>value = data[compute_value()];
+}</code></pre></div>
+<h2 id="gotchas"><a href="#gotchas">Gotchas</a></h2>
+<ul>
+<li>
+<p>Unlike <code>debug_assert!</code> et. al., the condition of an <code>assume!</code> is always present -
+it’s the panic that is removed. Complicated assumptions involving function calls
+and side effects are unlikely to be helpful; the condition ought to be trivial and
+involve only immediately available facts.</p>
+</li>
+<li>
+<p>As stated, this relies on the optimizer to propagate the assumption. Differences in
+optimization level or mood of the compiler may cause it to fail to elide assertions
+in the final output. If you simply <em>must</em> have no checking and do not want to rely
+on optimizations, then a <code>debug_assert!</code> + <code>unsafe</code> access is the way to go.</p>
+</li>
+<li>
+<p>Avoid using <code>assume!(unsafe: false)</code> to indicate unreachable code. Although this works,
+the return type is <code>()</code> and not <code>!</code>. This can result in warnings or errors if e.g. other
+branches evaluate to a type other than <code>()</code>. Use <code>assume!(unsafe: @unreachable)</code> instead.</p>
+</li>
+</ul>
+</div></details><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2><ul class="item-table"><li><div class="item-name"><a class="macro" href="macro.assume.html" title="macro assume::assume">assume</a></div><div class="desc docblock-short">Assumes that the given condition is true.</div></li></ul></section></div></main></body></html>
