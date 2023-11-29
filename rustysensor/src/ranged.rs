@@ -30,12 +30,14 @@ If you wish to do so, please reach out to the current maintainer.
 use contracts::*;
 use crate::em::consts::*;
 
+/// The travel time given range and group velocity
 pub fn travel_time(range : f64, group_velocity : f64) -> f64 {
 	return 2.0 * range / group_velocity;
 }
 
 // Ranged systems
 
+/// The SNR computed using RMS power of signal and noise
 #[requires(signal.len() == noise.len())]
 #[ensures(ret >= 0.0)]
 pub fn averaging_rms_snr(signal : &[f64], noise : &[f64]) -> f64 {
@@ -52,10 +54,12 @@ pub fn averaging_rms_snr(signal : &[f64], noise : &[f64]) -> f64 {
 	return (mean_square_signal / mean_square_noise).sqrt()
 }
 
+/// The accuracy ratio given rise time and signal to noise ratio
 pub fn accuracy(rise_time : f64, snr : f64) -> f64 {
 	return rise_time / snr;
 }
 
+/// The range accuracy
 pub fn range_accuracy(
 	vg : f64
 	, tr_op : Option<f64>
@@ -77,11 +81,14 @@ pub fn range_accuracy(
 
 // TODO: radar range equation
 
+/// Range ambiguity. `p_op` defaults to `1000.0` if not provided
 pub fn range_ambiguity(vg : f64, p_op  : Option<f64>) -> f64 {
 	let p : f64 = p_op.unwrap_or(1000.0);
 	return vg / 2.0 * p;
 }
 
+/// The upper bound of possible periods. Note that this period is
+/// an unreachable upper bound.
 pub fn longest_period(vg : f64, h_op  : Option<f64>) -> f64 {
 	let h  : f64 = h_op.unwrap_or(200.0);
 	return vg / 2.0 * h;

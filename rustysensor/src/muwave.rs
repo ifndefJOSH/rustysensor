@@ -55,9 +55,10 @@ pub mod instruments {
 	//     V: Vertically polarized
 	//     R: Right polarized
 	//     L: Left polarized
+	//     VH: Vertically and horizontally polarized
 	#[derive(Copy, Clone)]
 	pub enum Polarization {
-		H, V, R, L
+		H, V, R, L, VH
 	}
 
 	#[derive(Copy, Clone)]
@@ -82,7 +83,42 @@ pub mod instruments {
 		, delta_t : f64     // Temp differential (Kelvin)
 	}
 
-	// TODO: SSMIS and MSMR tables
+	// SSMIS and MSMR tables
+	/// Characteristic SSMIS bands. Channels 0-4 are most often used for Earth's
+	/// surface and can also be used for SSM/I instruments.
+	const ssmis : [Band; 24] = [
+		Band{ f_min : 19.35, f_max : 19.35, b : 355.0, p : Polarization::H, delta_t : 0.35, res_x : 73, res_y : 47 }
+		, Band{ f_min : 19.35, f_max : 19.35, b : 357.0, p : Polarization::V, delta_t : 0.35, res_x : 73, res_y : 47 }
+		, Band{ f_min : 22.235, f_max : 22.235, b : 401.0, p : Polarization::V, delta_t : 0.45, res_x : 73, res_y : 47 }
+		, Band{ f_min : 37.0, f_max : 37.0, b : 1616.0, p : Polarization::H, delta_t : 0.22, res_x : 41, res_y : 31 }
+		, Band{ f_min : 37.0, f_max : 37.0, b : 1545.0, p : Polarization::V, delta_t : 0.22, res_x : 41, res_y : 31 }
+		, Band{ f_min : 50.3, f_max : 50.3, b : 380.0, p : Polarization::H, delta_t : 0.34, res_x : 27, res_y : 18 }
+		, Band{ f_min : 52.8, f_max : 52.8, b : 389.0, p : Polarization::H, delta_t : 0.32, res_x : 27, res_y : 18 }
+		, Band{ f_min : 53.596, f_max : 53.596, b : 380.0, p : Polarization::H, delta_t : 0.33, res_x : 27, res_y : 18 }
+		, Band{ f_min : 54.4, f_max : 54.4, b : 383.0, p : Polarization::H, delta_t : 0.33, res_x : 27, res_y : 18 }
+		, Band{ f_min : 55.5, f_max : 55.5, b : 391.0, p : Polarization::H, delta_t : 0.34, res_x : 27, res_y : 18 }
+		, Band{ f_min : 57.29, f_max : 57.29, b : 330.0, p : Polarization::R, delta_t : 0.41, res_x : 27, res_y : 18 }
+		, Band{ f_min : 59.4, f_max : 59.4, b : 239.0, p : Polarization::R, delta_t : 0.4, res_x : 27, res_y : 18 }
+		, Band{ f_min : 62.998, f_max : 63.569, b : 1.35, p : Polarization::R, delta_t : 2.7, res_x : 27, res_y : 18 }
+		, Band{ f_min : 60.435, f_max : 61.151, b : 1.35, p : Polarization::R, delta_t : 2.7, res_x : 27, res_y : 18 }
+		, Band{ f_min : 60.435, f_max : 61.151, b : 1.3, p : Polarization::R, delta_t : 1.9, res_x : 27, res_y : 18 }
+		, Band{ f_min : 60.435, f_max : 61.151, b : 2.6, p : Polarization::R, delta_t : 1.3, res_x : 27, res_y : 18 }
+		, Band{ f_min : 60.435, f_max : 61.151, b : 7.35, p : Polarization::R, delta_t : 0.8, res_x : 27, res_y : 18 }
+		, Band{ f_min : 60.435, f_max : 61.151, b : 26.5, p : Polarization::R, delta_t : 0.9, res_x : 27, res_y : 18 }
+		, Band{ f_min : 91.665, f_max : 91.665, b : 1411.0, p : Polarization::H, delta_t : 0.19, res_x : 14, res_y : 13 }
+		, Band{ f_min : 91.665, f_max : 91.665, b : 1418.0, p : Polarization::V, delta_t : 0.19, res_x : 14, res_y : 13 }
+		, Band{ f_min : 150.0, f_max : 150.0, b : 1642.0, p : Polarization::H, delta_t : 0.53, res_x : 14, res_y : 13 }
+		, Band{ f_min : 182.311, f_max : 184.311, b : 513.0, p : Polarization::H, delta_t : 0.38, res_x : 14, res_y : 13 }
+		, Band{ f_min : 180.311, f_max : 186.311, b : 1019.0, p : Polarization::H, delta_t : 0.39, res_x : 14, res_y : 13 }
+		, Band{ f_min : 176.711, f_max : 189.911, b : 1526.0, p : Polarization::H, delta_t : 0.56, res_x : 14, res_y : 13 }];
+
+	/// MSMR instrument bands
+	const msmr : [Band; 4] = [
+		Band{ f_min : 6.6, f_max : 6.6, b : 350.0, p : Polarization::VH, delta_t : 1.0, res_x : 105, res_y : 68 }
+		, Band{ f_min : 10.65, f_max : 10.65, b : 100.0, p : Polarization::VH, delta_t : 1.0, res_x : 66, res_y : 43 }
+		, Band{ f_min : 18.0, f_max : 6.6, b : 200.0, p : Polarization::VH, delta_t : 1.0, res_x : 40, res_y : 26 }
+		, Band{ f_min : 21.0, f_max : 6.6, b : 400.0, p : Polarization::VH, delta_t : 1.0, res_x : 34, res_y : 22 }
+		];
 	// TODO: AMSU-A and MHS Tables
 }
 
