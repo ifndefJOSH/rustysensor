@@ -1,7 +1,8 @@
 // ===================== Electro Optical Systems =====================
 
-mod el_opt {
+// mod el_opt {
 	use contracts::*;
+	use crate::em::consts::*;
 	mod tables {
 		#[derive(Clone, Debug)]
 		struct Range {
@@ -164,7 +165,7 @@ mod el_opt {
 	/*
 	 * Returns the OCM-2 band given an OCM-2 wavelength
 	 * */
-	#[requires(lambda >= 4.04e-7 && lambda <= 8.85-7, "Wavelength must be in accurate OCM-2 region!")]
+	#[requires(lambda >= 4.04e-7 && lambda <= 8.85e-7, "Wavelength must be in accurate OCM-2 region!")]
 	#[ensures(ret > 0 && ret < 8)]
 	fn ocm_2(lambda : f64) -> u8 {
 		if lambda >= 4.04e-07 && lambda <= 4.24e-07 {
@@ -243,7 +244,7 @@ mod el_opt {
 	#[requires(temp > 0.0)]
 	#[ensures(ret > 0.0)]
 	fn avg_spectral_radiance(K1 : f64, K2 : f64, temp : f64) -> f64 {
-		return K1 / ((K2 / T).exp() - 1.0);
+		return K1 / ((K2 / temp).exp() - 1.0);
 	}
 
 	/*
@@ -316,4 +317,4 @@ mod el_opt {
 
 	// TODO: split window technique
 	// TODO: Hosek-Wilkie and Preetham
-}
+// }
