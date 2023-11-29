@@ -33,6 +33,7 @@ pub(crate) mod consts {
 
 pub mod tables {
 	use crate::em::consts::*;
+	use std::borrow::Cow;
 	#[derive(Clone, Debug)]
 	struct Polarizability {
 		optical : f64
@@ -58,6 +59,27 @@ pub mod tables {
 		optical : 18.9e-30 / EPSILON_0_SI
 		, radio : 368.0e-30 / EPSILON_0_SI
 	};
+
+	#[derive(Clone, Debug)]
+	struct AtmosFraction {
+		chemical : Cow<'static, str>
+		, volume_frac : f64
+		, mass : f64
+	}
+	const composition : [AtmosFraction; 12] = [
+		AtmosFraction{ chemical :   std::borrow::Cow::Borrowed("N2" ), volume_frac : 0.7808, mass : 8910.0 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("O2" ), volume_frac : 0.2095, mass : 2093.0 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("Ar" ), volume_frac : 9.34e-3, mass : 133.0 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("CO2"), volume_frac : 3.9e-4, mass : 6.4 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("H2O"), volume_frac : 2.8e-3, mass : 180.0 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("Ne" ), volume_frac : 1.8e-6, mass : 9.9e-3 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("SO2"), volume_frac : 1.0e-6, mass : 2.6e-2 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("H2" ), volume_frac : 5.0e-7, mass : 4.0e-4 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("O3" ), volume_frac : 1.0e-6, mass : 5.3e-3 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("N2O"), volume_frac : 2.7e-7, mass : 4.0e-3 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("Xe" ), volume_frac : 9.0e-8, mass : 4.0e-3 }
+		, AtmosFraction{ chemical : std::borrow::Cow::Borrowed("NO2"), volume_frac : 2.0e-8, mass : 4.0e-4 }
+		];
 }
 
 use crate::em::consts::*;
@@ -208,6 +230,10 @@ fn gas_dielectric_constant(num_density : u32, polarizability : f64) -> f64 {
 	return 1.0 + (num_density as f64 * polarizability) / EPSILON_0_SI;
 }
 
+fn plasma_dielectric_constant(num_density : u32, angular_frequency : f64) -> f64 {
+	return 1.0 - num_density as f64 * CHARGE_E / (EPSILON_0_SI * MASS_E * angular_frequency.powi(2));
+}
+
 fn gas_refractive_index(num_density : u32, polarizability : f64) -> f64 {
 	return 1.0 + (num_density as f64 * polarizability) / (2.0 * EPSILON_0_SI);
 }
@@ -240,3 +266,27 @@ fn exit_angle(entry_angle : f64, current_refractive : f64, new_refractive : f64)
 
 // ===================== EM radiation interacting with Earths atmosphere =====================
 
+fn angstroem_attenuation(wavelength : f64, base_attenuation : f64, angstroem_exponent : Option<f64>) -> f64 {
+	let n = angstroem_exponent.unwrap_or(4.0);
+	return base_attenuation * wavelength.powf(0.0 - n);
+}
+
+fn fog_liquid_mass_density(num_density : u64, radius : f64) -> f64 {
+	let WATER_DENSITY = 1.0;
+	return 4.0 * PI * radius.powi(3) * num_density as f64 * WATER_DENSITY / 3.0
+}
+
+fn fog_scattering_coefficient(mass_density : f64, radius : f64) -> f64 {
+	let WATER_DENSITY = 1.0;
+	return 3.0 * mass_density / (4.0 * radius * WATER_DENSITY);
+}
+
+fn plasma_refractive_index(num_density : u32, angular_frequency : f64) -> f64 {
+	return 1.0 - num_density as f64 * CHARGE_E.powi(2) / (2.0 * EPSILON_0_SI * MASS_E * angular_frequency.powi(2));
+}
+
+// Phase velocities may be higher than the speed of light
+fn plasma_phase_velocity(num_density : u32, angular_frequency : f64) -> f64 {
+	let n = plasma_refractive_index(num_density, angular_frequency);
+	return C / n;
+}
