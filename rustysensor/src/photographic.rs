@@ -69,7 +69,7 @@ pub fn film_illuminance(f_num : f64, lens_incident_luminance : f64) -> f64 {
 /// The "slope" is the slope of the line for $L(r)$. If the slope is
 /// positive, then barrel distortion occurs, else pincushion distortion
 /// occurs. The x and y are given assuming (0, 0) is the center of the
-/// image, not the top-left as many libraries do.
+/// image (the principle point), not the top-left as many libraries do.
 pub fn radial_distort(x : &mut f64, y : &mut f64, slope : Option<f64>) {
 	let m = slope.unwrap_or(0.1);
 	let r = ((*x).powi(2) + (*y).powi(2)).sqrt();
@@ -80,3 +80,50 @@ pub fn radial_distort(x : &mut f64, y : &mut f64, slope : Option<f64>) {
 }
 
 // TODO: Future work: radially distort an entire image, include antialiasing
+
+/// Calculates the location on an image of a point in threespace
+/// with a camera also at a certain point. Also requires a focal length
+/// Currently NOT GPU-accelerated
+#[requires(out_pt.len() == 2)]
+#[requires(camera_location.len() == 3)]
+#[requires(object_location.len() == 3)]
+#[requires(f_len > 0.0)]
+pub fn image_location(out_pt : &mut [f64], camera_location : &[f64], object_location : &[f64], f_len : f64) -> f64 {
+	let x_pr = object_location[0] - camera_location[0];
+	let y_pr = object_location[1] - camera_location[1];
+	let z_pr = object_location[2] - camera_location[2];
+	let u = f_len * x_pr / z_pr;
+	let v = f_len * y_pr / z_pr;
+	(*out_pt)[0] = u;
+	(*out_pt)[1] = v;
+}
+
+// TODO: nice eventual addition: given a specific height, find actual x and y location
+
+/// Computes the distance ON THE IMAGE of the vertical object from the image's
+/// principle point, i.e., the center. Must know the ground distance ON THE IMAGE
+#[requires(f_len > 0.0)]
+#[requires(ground_dist > 0.0)]
+#[requires(camera_height > 0.0)]
+pub fn principle_point_distance(f_len : f64, ground_dist : f64, camera_height : f64) -> f64 {
+	return f_len * ground_dist / camera_height;
+}
+
+/// Computes the ground distance ON THE IMAGE given the relief distance, camera
+/// height, and focal length
+#[requires(f_len > 0.0)]
+#[requires(princ_pt_dist > 0.0)]
+#[requires(camera_height > 0.0)]
+pub fn ground_dist(f_len : f64, princ_pt_dist : f64, camera_height : f64) -> f64 {
+	return princ_pt_dist * camera_height / f_len;
+}
+
+/// Computes the relief displacement of a vertical object far from the ground
+/// Takes a focal length, camera height, and object height
+#[requires(f_len > 0.0)]
+#[requires(ground_dist > 0.0)]
+#[requires(camera_height > object_height && object_height > 0.0)]
+pub fn relief_displacement(f_len : f64, ground_dist : f64, camera_height : f64, object_height : f64) -> f64 {
+	let pt_dist = principle_point_distance(f_len, ground_dist, camera_height);
+	return object_height * pt_dist / (camera_height - object_height);
+}
