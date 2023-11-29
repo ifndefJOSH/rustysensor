@@ -35,6 +35,8 @@ use crate::em::consts::*;
 /// $d = \frac{1}{2r}$
 /// We can also write it as
 /// $r = \frac{1}{2d}$
+#[requires(res > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn dist_res(res : f64) -> f64 {
 	return 1.0 / (2.0 * res);
 }
@@ -42,17 +44,26 @@ pub fn dist_res(res : f64) -> f64 {
 /// Computes modulation given min and max amplitudes (intensities)
 /// Takes: `i_mx`, max intensity
 ///        `i_mn`, min intensity
+#[requires(i_mx + i_mn > 0.0)]
+#[requires(i_mx > i_mn)]
+#[ensures(ret > 0.0)]
 pub fn modulation(i_mx : f64, i_mn : f64) -> f64 {
 	return (i_mx - i_mn) / (i_mx + i_mn);
 }
 
 /// Computes focal length from object and image distance for a single lens system
+#[requires(obj_dist > 0.0)]
+#[requires(image_dist > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn focal_len(obj_dist : f64, image_dist : f64) -> f64 {
 	let f_inv = 1.0 / obj_dist + 1.0 / image_dist;
 	return 1.0 / f_inv;
 }
 
 /// Computes the actual (object) distance given focal length and image distance
+#[requires(image_dist > 0.0)]
+#[requires(focal_len > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn actual_dist(image_dist : f64, focal_len : f64) -> f64 {
 	let act_inv = 1.0 / focal_len - 1.0 / image_dist;
 	return 1.0 / act_inv;
@@ -61,6 +72,9 @@ pub fn actual_dist(image_dist : f64, focal_len : f64) -> f64 {
 /// Calculates film illuminance for a lens
 /// Takes: `f_num`: The f/number (sometimes called f-stops) of the lens
 ///        `lens_incident_luminance`: the incident luminance of the lens
+#[requires(f_num > 0.0)]
+#[requires(lens_incident_luminance > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn film_illuminance(f_num : f64, lens_incident_luminance : f64) -> f64 {
 	return PI * f_num.powi(2) * lens_incident_luminance / 4.0;
 }
