@@ -31,11 +31,16 @@ use contracts::*;
 use crate::em::consts::*;
 // ===================== Passive Microwave Systems =====================
 
-/*
- * Antenna types supported by this library
- * */
+/// Antenna types supported by this library
+///
+/// 1. `Monopole`: A simple monopole antenna
+/// 2. `ShortDipole`: A short dipole antenna
+/// 3. `HalfWaveDipole`: A dipole antenna whose size is half the operating wavelength
+/// 4. `YagiYudaSix`: A Yagi-Yuda antenna with six horizontal rods
+/// 5. `Rectangular`: A rectangular-shaped antenna
+/// 6. `Parabaloid`: A Circular paraboloid antenna
 #[derive(PartialEq)]
-enum AntennaType {
+pub enum AntennaType {
 	Monopole          // A simple monopole antenna
 	, ShortDipole     // A short dipole antenna
 	, HalfWaveDipole  // A dipole antenna whose size is half the operating wavelength
@@ -44,19 +49,19 @@ enum AntennaType {
 	, Parabaloid      // A Circular paraboloid antenna
 }
 
-mod instruments {
+pub mod instruments {
 	// Polarization types
 	//     H: Horizontally polarized
 	//     V: Vertically polarized
 	//     R: Right polarized
 	//     L: Left polarized
 	#[derive(Copy, Clone)]
-	enum Polarization {
+	pub enum Polarization {
 		H, V, R, L
 	}
 
 	#[derive(Copy, Clone)]
-	struct Band {
+	pub struct Band {
 		f_min : f64          // frequency min (GHz)
 		, f_max : f64        // frequency max (GHz)
 		, b : f64            // bandwidth (MHz)
@@ -67,7 +72,7 @@ mod instruments {
 	}
 
 	#[derive(Copy, Clone)]
-	struct Channel {
+	pub struct Channel {
 		channel : u8
 		, f_min : f64       // frequency min (GHz)
 		, f_max : f64       // frequency max (GHz)
@@ -80,23 +85,20 @@ mod instruments {
 	// TODO: SSMIS and MSMR tables
 	// TODO: AMSU-A and MHS Tables
 }
-/*
- * Computes the Johnson/Nyquist noise power of an antenna
- * */
+
+/// Computes the Johnson/Nyquist noise power of an antenna
 #[requires(antenna_temp > 0.0)]
 #[requires(band_size > 0.0)]
 #[ensures(ret > 0.0)]
-fn jnoise_power(antenna_temp : f64, band_size : f64) -> f64 {
+pub fn jnoise_power(antenna_temp : f64, band_size : f64) -> f64 {
 	return K * antenna_temp * band_size;
 }
 
-/*
- * Computes half power bandwidth. The `size` parameter is dependent on
- * the type of antenna:
- * 1. For rectangular, it's the size of the sides
- * 2. For Circular paraboloid it's the diameter
- * */
-fn hpbw(lambda : f64, size : f64, atype : AntennaType) -> f64 {
+/// Computes half power bandwidth. The `size` parameter is dependent on
+/// the type of antenna:
+/// 1. For rectangular, it's the size of the sides
+/// 2. For Circular paraboloid it's the diameter
+pub fn hpbw(lambda : f64, size : f64, atype : AntennaType) -> f64 {
 	if atype == AntennaType::Monopole {
 		return 0.0; // isomorphic
 	}
@@ -114,20 +116,16 @@ fn hpbw(lambda : f64, size : f64, atype : AntennaType) -> f64 {
 	}
 }
 
-/**
- * Computes the directivity given beam solid angle
- * bsa: Beam solid angle
- * */
+/// Computes the directivity given beam solid angle
+/// bsa: Beam solid angle
 #[requires(bsa >= 0.0 && bsa <= 6.29)]
 #[ensures(ret <= 2.0 && ret >= 0.0)]
-fn directivity(bsa : f64) -> f64 {
+pub fn directivity(bsa : f64) -> f64 {
 	return 4.0 * PI / bsa;
 }
 
-/**
- * Computes beam solid angle from power pattern via numerical integration
- * */
-fn beam_solid_angle(P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
+/// Computes beam solid angle from power pattern via numerical integration
+pub fn beam_solid_angle(P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
 	let s : f64 = step.unwrap_or(0.01);
 	// Size of square for integration
 	let s2 = s.powi(2);
@@ -144,10 +142,9 @@ fn beam_solid_angle(P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
 	return sum;
 }
 
-/**
- * Computes antenna temperature via numerical integration
- * */
-fn antenna_temp(TB: &dyn Fn(f64, f64) -> f64, P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
+
+/// Computes antenna temperature via numerical integration
+pub fn antenna_temp(TB: &dyn Fn(f64, f64) -> f64, P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
 	let bsa = beam_solid_angle(P, step);
 	let s : f64 = step.unwrap_or(0.01);
 	// Size of square for integration
@@ -165,71 +162,54 @@ fn antenna_temp(TB: &dyn Fn(f64, f64) -> f64, P: &dyn Fn(f64, f64) -> f64, step 
 	return sum / bsa;
 }
 
-/**
- * Computes forward gain using power pattern and efficiency
- * */
-fn forward_gain(efficiency : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
+
+/// Computes forward gain using power pattern and efficiency
+pub fn forward_gain(efficiency : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
 	// Directivity
 	let d = 4.0 * PI / beam_solid_angle(P, None);
 	return efficiency * d;
 }
 
-/**
- * Computes spectral radiance given temperature and wavelength
- * */
-fn spectral_radiance(tb : f64, wavelength : f64) -> f64{
+/// Computes spectral radiance given temperature and wavelength
+pub fn spectral_radiance(tb : f64, wavelength : f64) -> f64{
 	return 2.0 * K * tb / wavelength.powi(2);
 }
 
-/**
- * Computes spectral flux density
- * */
-fn spectral_flux_density(tb : f64, wavelength : f64, small_angle : f64) -> f64 {
+/// Computes spectral flux density
+pub fn spectral_flux_density(tb : f64, wavelength : f64, small_angle : f64) -> f64 {
 	return 2.0 * K * tb * small_angle / wavelength.powi(2);
 }
 
-/**
- * Computes the effective area of an antenna
- * */
-fn effective_area(wavelength : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
+/// Computes the effective area of an antenna
+pub fn effective_area(wavelength : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
 	let bsa = beam_solid_angle(P, None);
 	return wavelength.powi(2) / bsa;
 }
 
-/**
- * Computes antenna sensitivity ($\Delta T$)
- * */
-fn sensitivity(sys_temp : f64, c : Option<f64>, del_t : Option<f64>, del_f : Option<f64>) -> f64 {
+/// Computes antenna sensitivity ($\Delta T$)
+pub fn sensitivity(sys_temp : f64, c : Option<f64>, del_t : Option<f64>, del_f : Option<f64>) -> f64 {
 	let c_val = c.unwrap_or(5.0);
 	let d_t = del_t.unwrap_or(0.01);
 	let d_f = del_f.unwrap_or(0.01);
 	return c_val * sys_temp / (d_t * d_f).sqrt();
 }
 
-/**
- * Computes cross-polarization gradient ratio ($XPGR$)
- * */
-fn xpgr(t_19h : f64, t_37v : f64) -> f64 {
+/// Computes cross-polarization gradient ratio ($XPGR$)
+pub fn xpgr(t_19h : f64, t_37v : f64) -> f64 {
 	return (t_19h - t_37v) / (t_19h + t_37v);
 }
 
-/**
- * Computes polarization ratio ($PR$)
- * */
-fn polarization_ratio(t_19h : f64, t_19v : f64) -> f64 {
+/// Computes polarization ratio ($PR$)
+pub fn polarization_ratio(t_19h : f64, t_19v : f64) -> f64 {
 	return (t_19v - t_19h) / (t_19v + t_19h);
 }
 
-/**
- * Computes gradient ratio ($GR$)
- * */
-fn gradient_ratio(t_19v : f64, t_37v : f64) -> f64 {
+/// Computes gradient ratio ($GR$)
+pub fn gradient_ratio(t_19v : f64, t_37v : f64) -> f64 {
 	return (t_37v - t_19v) / (t_37v + t_19v);
 }
 
-/**
- * Computes upwelling component ($T_b$) of temperature through atmosphere.
- * */
-fn upwelling_component(tau : f64, T : &dyn Fn(f64) -> f64) -> f64 {
+/// Computes upwelling component ($T_b$) of temperature through atmosphere.
+pub fn upwelling_component(tau : f64, T : &dyn Fn(f64) -> f64) -> f64 {
 	return T(1.0 - (-tau).exp());
 }

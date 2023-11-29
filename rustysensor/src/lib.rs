@@ -27,17 +27,22 @@ If you wish to do so, please reach out to the current maintainer.
 
 */
 
-mod el_opt;
-mod em;
-mod muwave;
-mod photographic;
-mod ranged;
+/// The Electromagnetics module
+pub mod em;
+/// The Electro Optical Module
+pub mod el_opt;
+/// The Microwave module
+pub mod muwave;
+/// The photographic systems module
+pub mod photographic;
+/// The ranged and scattered systems modules
+pub mod ranged;
 
-/*
- * `rustysensor` is a crate which provides functionality related to remote sensing applications
- * with a particular focus on embedded systems, accuracy, and electromagnetic sensing. It implements
- * a number of approximations, formulas, and methods used widely by sensing applications.
- * */
+/// # RustySensor
+///
+/// `rustysensor` is a crate which provides functionality related to remote sensing applications
+/// with a particular focus on embedded systems, accuracy, and electromagnetic sensing. It implements
+/// a number of approximations, formulas, and methods used widely by sensing applications.
 
 #[cfg(test)]
 mod tests {

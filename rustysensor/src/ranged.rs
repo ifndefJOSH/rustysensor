@@ -30,7 +30,7 @@ If you wish to do so, please reach out to the current maintainer.
 use contracts::*;
 use crate::em::consts::*;
 
-fn travel_time(range : f64, group_velocity : f64) -> f64 {
+pub fn travel_time(range : f64, group_velocity : f64) -> f64 {
 	return 2.0 * range / group_velocity;
 }
 
@@ -38,7 +38,7 @@ fn travel_time(range : f64, group_velocity : f64) -> f64 {
 
 #[requires(signal.len() == noise.len())]
 #[ensures(ret >= 0.0)]
-fn averaging_rms_snr(signal : &[f64], noise : &[f64]) -> f64 {
+pub fn averaging_rms_snr(signal : &[f64], noise : &[f64]) -> f64 {
 	let mut mean_square_signal : f64 = 0.0;
 	for sample in signal.into_iter().enumerate() {
 		mean_square_signal += sample.1.powi(2);
@@ -52,11 +52,11 @@ fn averaging_rms_snr(signal : &[f64], noise : &[f64]) -> f64 {
 	return (mean_square_signal / mean_square_noise).sqrt()
 }
 
-fn accuracy(rise_time : f64, snr : f64) -> f64 {
+pub fn accuracy(rise_time : f64, snr : f64) -> f64 {
 	return rise_time / snr;
 }
 
-fn range_accuracy(
+pub fn range_accuracy(
 	vg : f64
 	, tr_op : Option<f64>
 	, s_op  : Option<f64>
@@ -77,39 +77,39 @@ fn range_accuracy(
 
 // TODO: radar range equation
 
-fn range_ambiguity(vg : f64, p_op  : Option<f64>) -> f64 {
+pub fn range_ambiguity(vg : f64, p_op  : Option<f64>) -> f64 {
 	let p : f64 = p_op.unwrap_or(1000.0);
 	return vg / 2.0 * p;
 }
 
-fn longest_period(vg : f64, h_op  : Option<f64>) -> f64 {
+pub fn longest_period(vg : f64, h_op  : Option<f64>) -> f64 {
 	let h  : f64 = h_op.unwrap_or(200.0);
 	return vg / 2.0 * h;
 }
 
-fn is_ideal_period(p : f64, vg : f64, h_op : Option<f64>) -> bool {
+pub fn is_ideal_period(p : f64, vg : f64, h_op : Option<f64>) -> bool {
 	return p < longest_period(vg, h_op);
 }
 
-// fn sampled_cross_track(
+// pub fn sampled_cross_track(
 
-// fn sampled_along_track(
+// pub fn sampled_along_track(
 
 // TODO
 
 // Scattered systems
 
 // most basic brdf: R = L1 / E
-fn brdf_basic(radiance : f64, irradiance : f64) -> f64 {
+pub fn brdf_basic(radiance : f64, irradiance : f64) -> f64 {
 	return radiance / irradiance;
 }
 // TODO: other brdf approximations
 
-fn bistatic_scattering_coefficient_basic(radiance : f64, irradiance : f64, angle : f64) -> f64 {
+pub fn bistatic_scattering_coefficient_basic(radiance : f64, irradiance : f64, angle : f64) -> f64 {
 	let r = brdf_basic(radiance, irradiance);
 	return bistatic_scattering_coefficient(r, angle);
 }
 
-fn bistatic_scattering_coefficient(brdf : f64, angle : f64) -> f64 {
+pub fn bistatic_scattering_coefficient(brdf : f64, angle : f64) -> f64 {
 	return 4.0 * PI * brdf * angle.cos();
 }

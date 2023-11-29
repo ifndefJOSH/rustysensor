@@ -28,6 +28,4 @@ If you wish to do so, please reach out to the current maintainer.
 */
 
 // ===================== Photographic systems =====================
-mod photographic {
-
-}
+// TODO

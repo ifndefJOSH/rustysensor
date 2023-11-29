@@ -85,13 +85,13 @@ mod tables {
 #[requires(wavelength > 0.0, "Wavelength must be greater than 0")]
 #[requires(d > 0.0 && d < 1.0, "Distance must be nonzero, but not too large")]
 #[ensures(ret > 0.0 && ret < 6.29)] // radians
-fn diffraction_angle(n : u32, wavelength : f64, d : f64) -> f64 {
+pub fn diffraction_angle(n : u32, wavelength : f64, d : f64) -> f64 {
 	return ((n as f64) * wavelength / d).asin();
 }
 
 #[requires(lambda >= 0.52e-6 && lambda <= 2.43e-6, "Wavelength must be in ASTER VNIR region!")]
 #[ensures(ret > 0 && ret < 10)]
-fn aster(lambda : f64) -> u8 {
+pub fn aster(lambda : f64) -> u8 {
 	if lambda <= 0.6e-6 {
 		return 1;
 	}
@@ -128,7 +128,7 @@ fn aster(lambda : f64) -> u8 {
 
 #[requires(lambda >= 4.05e-7 && lambda <= 2.155e-6, "Wavelength must be in accurate MODIS region!")]
 #[ensures(ret > 0 && ret < 19)]
-fn modis(lambda : f64) -> u8 {
+pub fn modis(lambda : f64) -> u8 {
 	if lambda >= 6.2e-07 && lambda <= 6.7e-07 {
 		return 1;
 	}
@@ -197,7 +197,7 @@ fn modis(lambda : f64) -> u8 {
  * */
 #[requires(lambda >= 4.04e-7 && lambda <= 8.85e-7, "Wavelength must be in accurate OCM-2 region!")]
 #[ensures(ret > 0 && ret < 8)]
-fn ocm_2(lambda : f64) -> u8 {
+pub fn ocm_2(lambda : f64) -> u8 {
 	if lambda >= 4.04e-07 && lambda <= 4.24e-07 {
 		return 1;
 	}
@@ -234,7 +234,7 @@ static mut a0 : f64 = 0.0;
 static mut a1 : f64 = 0.5;
 static mut a2 : f64 = 0.5;
 
-unsafe fn surface_temp_split_window(temp_b1 : f64, temp_b2 : f64) -> f64 {
+pub unsafe fn surface_temp_split_window(temp_b1 : f64, temp_b2 : f64) -> f64 {
 	return a0 + a1 * temp_b1 + a2 * temp_b2
 }
 
@@ -242,7 +242,7 @@ unsafe fn surface_temp_split_window(temp_b1 : f64, temp_b2 : f64) -> f64 {
  * In this case, we have a vector
  * */
 #[requires(temps_b0.len() == temps_b1.len() && temps_b1.len() == temps_b2.len())]
-unsafe fn train_split_window(temps_b0 : &[f64], temps_b1 : &[f64], temps_b2 : &[f64]) {
+pub unsafe fn train_split_window(temps_b0 : &[f64], temps_b1 : &[f64], temps_b2 : &[f64]) {
 	a0 = 0.0;
 	a1 = 0.0;
 	a2 = 0.0;
@@ -255,33 +255,31 @@ unsafe fn train_split_window(temps_b0 : &[f64], temps_b1 : &[f64], temps_b2 : &[
 #[requires(temp_a > 0.0 && temp_b1 > 0.0 && temp_b2 > 0.0, "All temperatures must be greater than 0")]
 #[requires((temp_b2 > temp_a) == (temp_b1 > temp_a))]
 #[ensures(ret > 0.0)]
-fn surface_temp(temp_b1 : f64, temp_b2 : f64, temp_a : f64, theta : f64) -> f64 {
+pub fn surface_temp(temp_b1 : f64, temp_b2 : f64, temp_a : f64, theta : f64) -> f64 {
 	let mut tau : f64 = 0.0; // Filler instantiation
 	return surface_temp_tau(temp_b1, temp_b2, temp_a, theta, &mut tau);
 }
 
-/*
- * Calculates surface temperature, $T_{b0}$ and optical thickness $\tau$
- * given data from two separate sensors and known temperatures at those
- * sensors.
- *
- * First, $\tau$ is calculated using the following derivation
- * \begin{align*}
- *     T_{b1} &= T_{b0}\exp(-\tau) + T_a (1 - \exp(-\tau)) \\
- *     T_{b2} &= T_{b0}\exp(-\tau\sec(\theta)) + T_a (1 - \exp(-\tau\sec(\theta))) \\
- *     T_{b0} &= \frac{T_{b2} - T_A(1 - \exp(-\tau\sec(\theta))}{\exp(-\tau\sec(\theta)} = \frac{T_{b1} - T_A(1 - \exp(-\tau))}{\exp(-\tau)} \\
- *     \frac{T_{b2} - T_A}{\exp(-\tau\sec{\theta}} + T_A =  \frac{T_{b1} - T_A}{\exp(-\tau} + T_A \\
- *      \ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right) &= \tau\sec(\theta) \\
- *      \tau &= \frac{1}{\sec \theta}\ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right) \\
- *      \tau &= \cos \theta \ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right)
- * \end{align*}
- * We therefore compute $\tau$ using the last equation in that list and then use that to calculate $T_{b0}$.
- * */
+/// Calculates surface temperature, $T_{b0}$ and optical thickness $\tau$
+/// given data from two separate sensors and known temperatures at those
+/// sensors.
+///
+/// First, $\tau$ is calculated using the following derivation
+/// \begin{align*}
+///     T_{b1} &= T_{b0}\exp(-\tau) + T_a (1 - \exp(-\tau)) \\
+///     T_{b2} &= T_{b0}\exp(-\tau\sec(\theta)) + T_a (1 - \exp(-\tau\sec(\theta))) \\
+///     T_{b0} &= \frac{T_{b2} - T_A(1 - \exp(-\tau\sec(\theta))}{\exp(-\tau\sec(\theta)} = \frac{T_{b1} - T_A(1 - \exp(-\tau))}{\exp(-\tau)} \\
+///     \frac{T_{b2} - T_A}{\exp(-\tau\sec{\theta}} + T_A =  \frac{T_{b1} - T_A}{\exp(-\tau} + T_A \\
+///      \ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right) &= \tau\sec(\theta) \\
+///      \tau &= \frac{1}{\sec \theta}\ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right) \\
+///      \tau &= \cos \theta \ln\left(\frac{T_{b2} - T_A}{T_{b1} - T_A}\right)
+/// \end{align*}
+/// We therefore compute $\tau$ using the last equation in that list and then use that to calculate $T_{b0}$.
 #[requires(theta > 0.0 && theta < 6.28, "Angle must be greater than zero and less than 2PI")]
 #[requires(temp_a > 0.0 && temp_b1 > 0.0 && temp_b2 > 0.0, "All temperatures must be greater than 0")]
 #[requires((temp_b2 > temp_a) == (temp_b1 > temp_a))]
 #[ensures(ret > 0.0)]
-fn surface_temp_tau(temp_b1 : f64, temp_b2 : f64, temp_a : f64, theta : f64, tau : &mut f64) -> f64 {
+pub fn surface_temp_tau(temp_b1 : f64, temp_b2 : f64, temp_a : f64, theta : f64, tau : &mut f64) -> f64 {
 	// find tau
 	*tau = (theta.cos()) * ((temp_b2 - temp_a) / (temp_b1 - temp_a)).ln();
 	// Used twice, so only calculate once
@@ -296,7 +294,7 @@ fn surface_temp_tau(temp_b1 : f64, temp_b2 : f64, temp_a : f64, theta : f64, tau
 #[requires(K1 > 0.0 && K2 > 0.0)]
 #[requires(temp > 0.0)]
 #[ensures(ret > 0.0)]
-fn avg_spectral_radiance(K1 : f64, K2 : f64, temp : f64) -> f64 {
+pub fn avg_spectral_radiance(K1 : f64, K2 : f64, temp : f64) -> f64 {
 	return K1 / ((K2 / temp).exp() - 1.0);
 }
 
@@ -306,7 +304,7 @@ fn avg_spectral_radiance(K1 : f64, K2 : f64, temp : f64) -> f64 {
 #[requires(K1 > 0.0 && K2 > 0.0)]
 #[requires(avg_radiance > 0.0)]
 #[ensures(ret > 0.0)]
-fn earth_surface_temp(K1 : f64, K2 : f64, avg_radiance : f64) -> f64 {
+pub fn earth_surface_temp(K1 : f64, K2 : f64, avg_radiance : f64) -> f64 {
 	return K2 / (K1 / avg_radiance + 1.0).ln()
 }
 
@@ -317,7 +315,7 @@ fn earth_surface_temp(K1 : f64, K2 : f64, avg_radiance : f64) -> f64 {
 #[requires(density > 0.0)]
 #[requires(thermal_conductivity > 0.0)]
 #[ensures(ret > 0.0)]
-fn thermal_inertia(heat_capacity : f64, density : f64, thermal_conductivity : f64) -> f64 {
+pub fn thermal_inertia(heat_capacity : f64, density : f64, thermal_conductivity : f64) -> f64 {
 	return (heat_capacity * density * thermal_conductivity).sqrt();
 }
 
@@ -329,7 +327,7 @@ fn thermal_inertia(heat_capacity : f64, density : f64, thermal_conductivity : f6
 #[requires(angular_frequency > 0.0)]
 #[requires(thermal_conductivity > 0.0)]
 #[ensures(ret > 0.0)]
-fn thermal_wave_speed(heat_capacity : f64, density : f64, thermal_conductivity : f64, angular_frequency : f64) -> f64 {
+pub fn thermal_wave_speed(heat_capacity : f64, density : f64, thermal_conductivity : f64, angular_frequency : f64) -> f64 {
 	return ((2.0 * thermal_conductivity * angular_frequency) / (heat_capacity * density)).sqrt();
 }
 
@@ -340,7 +338,7 @@ fn thermal_wave_speed(heat_capacity : f64, density : f64, thermal_conductivity :
 #[requires(density > 0.0)]
 #[requires(thermal_conductivity > 0.0)]
 #[ensures(ret > 0.0)]
-fn thermal_diffusivity(heat_capacity : f64, density : f64, thermal_conductivity : f64) -> f64 {
+pub fn thermal_diffusivity(heat_capacity : f64, density : f64, thermal_conductivity : f64) -> f64 {
 	return thermal_conductivity / (heat_capacity * density);
 }
 
@@ -351,7 +349,7 @@ fn thermal_diffusivity(heat_capacity : f64, density : f64, thermal_conductivity 
 #[requires(emissivity > 0.0)]
 #[requires(mean_temp > 0.0)]
 #[ensures(ret > 0.0)]
-fn upward_heat_flux_weight(mean_temp : f64, emissivity : f64) -> f64 {
+pub fn upward_heat_flux_weight(mean_temp : f64, emissivity : f64) -> f64 {
 	return 4.0 * emissivity * SIGMA * mean_temp.powi(3);
 }
 
@@ -363,11 +361,9 @@ fn upward_heat_flux_weight(mean_temp : f64, emissivity : f64) -> f64 {
 #[requires(mean_temp > 0.0)]
 #[requires(temp > 0.0)]
 #[ensures(ret > 0.0)]
-fn upward_heat_flux(temp : f64, mean_temp : f64, emissivity : f64) -> f64 {
+pub fn upward_heat_flux(temp : f64, mean_temp : f64, emissivity : f64) -> f64 {
 	let alpha : f64 = upward_heat_flux_weight(mean_temp, emissivity);
 	return alpha * (temp - mean_temp);
 }
 
-// TODO: split window technique
 // TODO: Hosek-Wilkie and Preetham
-// }
