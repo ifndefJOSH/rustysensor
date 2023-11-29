@@ -1,3 +1,7 @@
-This software is provided without warranty. Currently, it is only available under a viral GPLv3 license, but soon it will be also available under a proprietary license for use in non-GPLv3 applications.
+This software is provided without warranty. Currently, it is only available
+under a viral GPLv3 license, but soon it will be also available under a proprietary
+license for use in non-GPLv3 applications.
 
 See GPLv3.txt for full license details.
+
+- k thx
