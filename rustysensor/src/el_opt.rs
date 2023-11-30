@@ -359,3 +359,5 @@ pub fn upward_heat_flux(temp : f64, mean_temp : f64, emissivity : f64) -> f64 {
 }
 
 // TODO: Hosek-Wilkie and Preetham
+
+// pub fn hosek_wilkie_luminance

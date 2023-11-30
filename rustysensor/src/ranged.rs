@@ -30,6 +30,35 @@ If you wish to do so, please reach out to the current maintainer.
 use contracts::*;
 use crate::em::consts::*;
 
+pub mod consts {
+	/// The radius of the Earth in kilometers
+	pub const EARTH_RAD   : f64 =  6371.0; // km
+	/// The radius of the Moon, not accounting for variation, in kilometers
+	pub const MOON_RAD    : f64 =  1737.4; // km
+	/// The radius of Mercury, not accounting for variation, in kilometers
+	pub const MERCURY_RAD : f64 =  2439.7; // km
+	/// The radius of Venus, not accounting for variation, in kilometers
+	pub const VENUS_RAD   : f64 =  6051.8; // km
+	/// The radius of Mars, not accounting for variation, in kilometers
+	pub const MARS_RAD    : f64 =  3389.5; // km
+	/// The radius of Jupiter, not accounting for variation, in kilometers
+	pub const JUPITER_RAD : f64 = 69911.0; // km
+	/// The radius of Saturn, not accounting for variation, in kilometers
+	pub const SATURN_RAD  : f64 = 58232.0; // km
+	/// The radius of Neptune, not accounting for variation, in kilometers
+	pub const NEPTUNE_RAD : f64 = 24622.0; // km
+	/// The radius of Uranus, not accounting for variation, in kilometers
+	pub const URANUS_RAD  : f64 = 25362.0; // km
+	/// The radius of Pluto, not accounting for variation, in kilometers
+	pub const PLUTO_RAD   : f64 =  1188.3; // km
+	/// The radius of Charon, not accounting for variation, in kilometers
+	pub const CHARON_RAD  : f64 =   606.0; // km
+	/// Q'apla' (success!)
+	pub const QUONOS_RAD  : f64 =  6410.2;
+}
+
+use crate::ranged::consts::*;
+
 /// The travel time given range and group velocity
 pub fn travel_time(range : f64, group_velocity : f64) -> f64 {
 	return 2.0 * range / group_velocity;
@@ -53,6 +82,8 @@ pub fn averaging_rms_snr(signal : &[f64], noise : &[f64]) -> f64 {
 	mean_square_noise /= signal.len() as f64;
 	return (mean_square_signal / mean_square_noise).sqrt()
 }
+
+// Laser profiling systems
 
 /// The accuracy ratio given rise time and signal to noise ratio
 pub fn accuracy(rise_time : f64, snr : f64) -> f64 {
@@ -94,19 +125,58 @@ pub fn longest_period(vg : f64, h_op  : Option<f64>) -> f64 {
 	return vg / 2.0 * h;
 }
 
+/// Returns `true` if the period `p` passed in is ideal according to `vg` and `h_op`
 pub fn is_ideal_period(p : f64, vg : f64, h_op : Option<f64>) -> bool {
 	return p < longest_period(vg, h_op);
 }
 
-// pub fn sampled_cross_track(
+/// This function applies to scanning laser profilers.
+/// Calculates the spacing of samples when sampling cross track,
+/// given the frequency, the angle, phi, and h, the range.
+/// `frequency` is the frequency of the sampling pattern's zig zag profile
+pub fn sampled_cross_track(frequency : f64, angle : f64, h : f64, impulse_period : f64) -> f64 {
+	return 4.0 * angle * frequency * h / impulse_period;
+}
 
-// pub fn sampled_along_track(
+/// This function applies to scanning laser profilers.
+/// Computes the average sampling interval in along-track direction.
+/// `velocity` is the velocity of the profiler, and `frequency is the
+/// frequency of the sampling pattern
+pub fn sampled_along_track(velocity : f64, frequency : f64) -> f64 {
+	return velocity / frequency;
+}
+
+// Radar altimetry
+
+/// Returns the min return time for a radar altimeter at height `height`.
+pub fn min_return_time(height : f64) -> f64 {
+	return 2 * height / C;
+}
+
+/// Calculates the footprint radius for a radar altimetre
+pub fn footprint_radius(rise_time : f64, height : f64, adjust_effective_height : bool) -> f64 {
+	if adjust_effective_height {
+		return (C * height * rise_time).sqrt();
+	}
+	let e_height = effective_height(height, None);
+	return (C * e_height * rise_time).sqrt();
+}
+
+/// Calculates the effective height accounting for the curvature of a spherical
+/// celestial body. If no radius is provided, then it defaults to the Earth's
+/// radius, in kilometers.
+pub fn effective_height(height : f64, radius : Option<f64>) -> f64 {
+	// default to earth's radius since most systems are here on earth
+	let rad = radius.unwrap_or(EARTH_RAD);
+	return 1.0 / (height.powi(-1) + rad.powi(-1));
+}
 
 // TODO
 
 // Scattered systems
 
 // most basic brdf: R = L1 / E
+/// Basic brdf estimate `radiance / irradiance`
 pub fn brdf_basic(radiance : f64, irradiance : f64) -> f64 {
 	return radiance / irradiance;
 }
