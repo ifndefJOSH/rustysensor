@@ -210,22 +210,32 @@ pub fn forward_gain(efficiency : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
 }
 
 /// Computes spectral radiance given temperature and wavelength
+#[requires(tb > 0.0)]
+#[requires(wavelength > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn spectral_radiance(tb : f64, wavelength : f64) -> f64{
 	return 2.0 * K * tb / wavelength.powi(2);
 }
 
-/// Computes spectral flux density
+/// Computes spectral flux density. Requires the small angle to be less
+/// than a radian
+#[requires(tb > 0.0)]
+#[requires(wavelength > 0.0)]
+#[requires(small_angle > 0.0 && small_angle < 1.0)]
 pub fn spectral_flux_density(tb : f64, wavelength : f64, small_angle : f64) -> f64 {
 	return 2.0 * K * tb * small_angle / wavelength.powi(2);
 }
 
 /// Computes the effective area of an antenna
+#[requires(wavelength > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn effective_area(wavelength : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
 	let bsa = beam_solid_angle(P, None);
 	return wavelength.powi(2) / bsa;
 }
 
 /// Computes antenna sensitivity ($\Delta T$)
+#[requires(sys_temp > 0.0)]
 pub fn sensitivity(sys_temp : f64, c : Option<f64>, del_t : Option<f64>, del_f : Option<f64>) -> f64 {
 	let c_val = c.unwrap_or(5.0);
 	let d_t = del_t.unwrap_or(0.01);
@@ -234,21 +244,31 @@ pub fn sensitivity(sys_temp : f64, c : Option<f64>, del_t : Option<f64>, del_f :
 }
 
 /// Computes cross-polarization gradient ratio ($XPGR$)
+#[requires(t_19h > 0.0)]
+#[requires(t_37v > 0.0)]
+#[ensures(t_19h > t_37v -> ret > 0.0)]
 pub fn xpgr(t_19h : f64, t_37v : f64) -> f64 {
 	return (t_19h - t_37v) / (t_19h + t_37v);
 }
 
 /// Computes polarization ratio ($PR$)
+#[requires(t_19h > 0.0)]
+#[requires(t_19v > 0.0)]
+#[ensures(t_19v > t_19h -> ret > 0.0)]
 pub fn polarization_ratio(t_19h : f64, t_19v : f64) -> f64 {
 	return (t_19v - t_19h) / (t_19v + t_19h);
 }
 
 /// Computes gradient ratio ($GR$)
+#[requires(t_19h > 0.0)]
+#[requires(t_37v > 0.0)]
+#[ensures(t_19h < t_37v -> ret > 0.0)]
 pub fn gradient_ratio(t_19v : f64, t_37v : f64) -> f64 {
 	return (t_37v - t_19v) / (t_37v + t_19v);
 }
 
 /// Computes upwelling component ($T_b$) of temperature through atmosphere.
+#[requires(tau > 0.0)]
 pub fn upwelling_component(tau : f64, T : &dyn Fn(f64) -> f64) -> f64 {
 	return T(1.0 - (-tau).exp());
 }

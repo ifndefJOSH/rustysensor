@@ -171,6 +171,23 @@ pub fn effective_height(height : f64, radius : Option<f64>) -> f64 {
 	return 1.0 / (height.powi(-1) + rad.powi(-1));
 }
 
+/// Computes the approximate coherence length given a frequency band
+#[requires(f_max > f_min)]
+#[requires(f_min > 0.0)]
+#[ensures(ret > 0.0)]
+pub fn coherence_length(f_min : f64, f_max : f64) -> f64 {
+	return C / (f_max - f_min);
+}
+
+/// Computes the approximate coherence width
+#[requires(antenna_height > 0.0)]
+#[requires(antenna_diameter > 0.0)]
+#[requires(frequency > 0.0)]
+#[ensures(ret > 0.0)]
+pub fn coherence_width(antenna_height : f64, frequency : f64, antenna_diameter : f64) -> f64 {
+	return c * antenna_height / (antenna_diameter * frequency);
+}
+
 // TODO
 
 // Scattered systems
