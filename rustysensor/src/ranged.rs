@@ -199,11 +199,46 @@ pub fn brdf_basic(radiance : f64, irradiance : f64) -> f64 {
 }
 // TODO: other brdf approximations
 
+/// A basic means of calculating the bistatic scattering coefficient with
+/// the approximation of the brdf in `brdf_basic`.
 pub fn bistatic_scattering_coefficient_basic(radiance : f64, irradiance : f64, angle : f64) -> f64 {
 	let r = brdf_basic(radiance, irradiance);
 	return bistatic_scattering_coefficient(r, angle);
 }
 
+/// The more general `bistatic_scattering_coefficient` function which
+/// takes a known brdf. If brdf is calculated using `brdf_basic` this is equivalent
+/// to `bistatic_scattering_coefficient_basic`
 pub fn bistatic_scattering_coefficient(brdf : f64, angle : f64) -> f64 {
 	return 4.0 * PI * brdf * angle.cos();
+}
+
+/// Computes flux density in a bistatic dual-radar system. However, this is only
+/// concerned with the flux density through the scanned surface.
+pub fn bistatic_flux_density(
+	antenna_gain      : f64 // The antenna's gain, Gt
+	, transmitted_power : f64 // Transmitted power Pt
+	, transmit_dist     : f64 // The distance from the transmitting antenna to the surface
+) -> f64 {
+	return antenna_gain * transmitted_power / (4.0 * PI * transmit_dist.powi(2));
+}
+
+// TODO: should we also have an irradiance function?
+
+/// Computes the received radar power in a bistatic dual radar system
+pub fn bistatic_radar_power(
+	b_scat_coefficient  : f64 // Bistatic scattering coefficient, denoted "gamma"
+	, collecting_area   : f64 // The size of the collecting area
+	, effective_area    : f64 // Effective area of receiver, Ar
+	, antenna_gain      : f64 // The antenna's gain, Gt
+	, transmitted_power : f64 // Transmitted power Pt
+	, incoming_angle    : f64 // Incoming angle, theta_0
+	, exit_angle        : f64 // The exit angle, theta_1
+	, transmit_dist     : f64 // The distance from the transmitting antenna to the surface
+	, received_dist     : f64 // The distance to the receiving antenna from the surface
+) -> f64 {
+	let f = bistatic_flux_density(antenna_gain, transmitted_power, transmit_dist);
+	let e = f * cos(incoming_angle);
+	let l = b_scat_coefficient * e / (4.0 * PI * cos(exit_angle));
+	return l * collecting_area * effective_area / received_dist.powi(2) * cos(exit_angle);
 }
