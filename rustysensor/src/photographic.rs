@@ -141,3 +141,61 @@ pub fn relief_displacement(f_len : f64, ground_dist : f64, camera_height : f64, 
 	let pt_dist = principle_point_distance(f_len, ground_dist, camera_height);
 	return object_height * pt_dist / (camera_height - object_height);
 }
+
+// /// Calculates optimal height resolution
+
+// Stereogrammetry
+/// Computes the overlap size of a photographical window given focal length, film width, baseline,
+/// and height.
+pub fn overlap_size(height : f64, focal_len : f64, baseline : f64, film_width : f64) -> f64 {
+	return film_width * height / focal_len - baseline;
+}
+
+/// Computes the real x, y and z coordinates given the x and y baseline and focal length
+#[requires(real_coord.len() == 3)]
+#[requires(image_coord1.len() == 2)]
+#[requires(image_coord2.len() == 2)]
+#[requires(displacement.len() == 2)]
+#[requires(focal_length > 0.0)]
+pub fn find_coordinate(
+	real_coord : &mut [f64]
+	, image_coord1 : &[f64]
+	, image_coord2 : &[f64]
+	, focal_length : f64
+	, displacement : &[f64]
+	, height : f64
+) {
+	let bx = displacement[0];
+	let by = displacement[1];
+	let u1 = (*image_coord1)[0];
+	let v1 = (*image_coord1)[1];
+	let u2 = (*image_coord2)[0];
+	let v2 = (*image_coord2)[1];
+	let c = (bx.powi(2) + by.powi(2)) / ((u1 - u2) * bx + (v1 - v2) * by);
+	(*real_coord)[0] = c * u1;
+	(*real_coord)[1] = c * v1;
+	(*real_coord)[2] = height + focal_length * c;
+}
+
+/// Computes contrast from max and min radiances
+#[requires(rmax >= rmin)]
+pub fn contrast(rmax : f64, rmin : f64) -> f64 {
+	return (rmax - rmin) / (rmax + rmin);
+}
+
+/// Computes the contrast of a black and white multi-dimensional vector of pixel values
+#[requires(img.len() > 0)]
+#[requires(img[0].len() > 0)]
+pub fn img_contrast(img : &[[f64]]) -> f64 {
+	let mut rmax = img[0][0];
+	let mut rmin = img[0][0];
+	let height = img[0].len();
+	for i in 0..img.len() {
+		for j in 0..img[0].len() {
+			assert_eq!(height, img[i].len());
+			if img[i][j] > rmax { rmax = img[i][j]; }
+			else if img[i][j] < rmin { rmin = img[i][j]; }
+		}
+	}
+	return contrast(rmax, rmin);
+}
