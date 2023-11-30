@@ -82,6 +82,8 @@ mod tables {
 				Range { index : 8, lbound : 8.45e-07, ubound : 8.85e-07 }];
 }
 
+/// Computes diffraction angle given number of slits (`n`), `wavelength`,
+/// and observational distance `d`.
 #[requires(wavelength > 0.0, "Wavelength must be greater than 0")]
 #[requires(d > 0.0 && d < 1.0, "Distance must be nonzero, but not too large")]
 #[ensures(ret > 0.0 && ret < 6.29)] // radians
@@ -89,6 +91,8 @@ pub fn diffraction_angle(n : u32, wavelength : f64, d : f64) -> f64 {
 	return ((n as f64) * wavelength / d).asin();
 }
 
+/// Takes a wavelength within the valid ASTER VNIR band and returns
+/// the band index, between `0` and `10`.
 #[requires(lambda >= 0.52e-6 && lambda <= 2.43e-6, "Wavelength must be in ASTER VNIR region!")]
 #[ensures(ret > 0 && ret < 10)]
 pub fn aster(lambda : f64) -> u8 {
@@ -126,6 +130,7 @@ pub fn aster(lambda : f64) -> u8 {
 	}
 }
 
+/// Takes a wavelength in the MODIS region and returns its associated band index
 #[requires(lambda >= 4.05e-7 && lambda <= 2.155e-6, "Wavelength must be in accurate MODIS region!")]
 #[ensures(ret > 0 && ret < 19)]
 pub fn modis(lambda : f64) -> u8 {
@@ -192,9 +197,8 @@ pub fn modis(lambda : f64) -> u8 {
 	}
 }
 
-/*
- * Returns the OCM-2 band given an OCM-2 wavelength
- * */
+/// Returns the OCM-2 band given an OCM-2 wavelength
+/// See also: `el_opt::tables::ocm_2`.
 #[requires(lambda >= 4.04e-7 && lambda <= 8.85e-7, "Wavelength must be in accurate OCM-2 region!")]
 #[ensures(ret > 0 && ret < 8)]
 pub fn ocm_2(lambda : f64) -> u8 {
@@ -251,6 +255,8 @@ pub unsafe fn train_split_window(temps_b0 : &[f64], temps_b1 : &[f64], temps_b2 
 	}
 }
 
+/// Computes the surface temp of a two-sensor system without also returning $\tau$
+/// See also `surface_temp_tau()`.
 #[requires(theta > 0.0 && theta < 6.28, "Angle must be greater than zero and less than 2PI")]
 #[requires(temp_a > 0.0 && temp_b1 > 0.0 && temp_b2 > 0.0, "All temperatures must be greater than 0")]
 #[requires((temp_b2 > temp_a) == (temp_b1 > temp_a))]
@@ -287,10 +293,8 @@ pub fn surface_temp_tau(temp_b1 : f64, temp_b2 : f64, temp_a : f64, theta : f64,
 	return (temp_b1 + temp_a * (1.0 - minus_tau_exp)) / minus_tau_exp;
 }
 
-/*
- * Calculates average spectral radiance given $K_1$ and $K_2$, two parameters related to the
- * specific sensing system. Requires the surface temperature in order to do it.
- * */
+/// Calculates average spectral radiance given $K_1$ and $K_2$, two parameters related to the
+/// specific sensing system. Requires the surface temperature in order to do it.
 #[requires(K1 > 0.0 && K2 > 0.0)]
 #[requires(temp > 0.0)]
 #[ensures(ret > 0.0)]
@@ -298,9 +302,7 @@ pub fn avg_spectral_radiance(K1 : f64, K2 : f64, temp : f64) -> f64 {
 	return K1 / ((K2 / temp).exp() - 1.0);
 }
 
-/*
- * Calculates the Earth's surface temperature given average spectral radiance and sensing system parameters $K_1$ and $K_2$
- * */
+/// Calculates the Earth's surface temperature given average spectral radiance and sensing system parameters $K_1$ and $K_2$
 #[requires(K1 > 0.0 && K2 > 0.0)]
 #[requires(avg_radiance > 0.0)]
 #[ensures(ret > 0.0)]
@@ -308,9 +310,7 @@ pub fn earth_surface_temp(K1 : f64, K2 : f64, avg_radiance : f64) -> f64 {
 	return K2 / (K1 / avg_radiance + 1.0).ln()
 }
 
-/*
- * Calculates thermal inertia given heat capacity, material density, and thermal conductivity
- * */
+/// Calculates thermal inertia given heat capacity, material density, and thermal conductivity
 #[requires(heat_capacity > 0.0)]
 #[requires(density > 0.0)]
 #[requires(thermal_conductivity > 0.0)]
@@ -319,9 +319,7 @@ pub fn thermal_inertia(heat_capacity : f64, density : f64, thermal_conductivity 
 	return (heat_capacity * density * thermal_conductivity).sqrt();
 }
 
-/*
- * Calculates thermal wave speed via heat capacity, material density, thermal conductivity, and angular frequency
- * */
+/// Calculates thermal wave speed via heat capacity, material density, thermal conductivity, and angular frequency
 #[requires(heat_capacity > 0.0)]
 #[requires(density > 0.0)]
 #[requires(angular_frequency > 0.0)]
@@ -331,9 +329,7 @@ pub fn thermal_wave_speed(heat_capacity : f64, density : f64, thermal_conductivi
 	return ((2.0 * thermal_conductivity * angular_frequency) / (heat_capacity * density)).sqrt();
 }
 
-/*
- * Calculates thermal diffusivity
- * */
+/// Calculates thermal diffusivity
 #[requires(heat_capacity > 0.0)]
 #[requires(density > 0.0)]
 #[requires(thermal_conductivity > 0.0)]
@@ -342,10 +338,8 @@ pub fn thermal_diffusivity(heat_capacity : f64, density : f64, thermal_conductiv
 	return thermal_conductivity / (heat_capacity * density);
 }
 
-/*
- * Calculates the weight factor $\alpha$ of the upward heat flux used in the equation
- * $\alpha(T - \bar{T})$
- * */
+/// Calculates the weight factor $\alpha$ of the upward heat flux used in the equation
+/// $\alpha(T - \bar{T})$
 #[requires(emissivity > 0.0)]
 #[requires(mean_temp > 0.0)]
 #[ensures(ret > 0.0)]
@@ -353,10 +347,8 @@ pub fn upward_heat_flux_weight(mean_temp : f64, emissivity : f64) -> f64 {
 	return 4.0 * emissivity * SIGMA * mean_temp.powi(3);
 }
 
-/*
- * Calculates upward heat flux given measured temperature, mean temperature, and the emissivity
- * of the surface
- * */
+/// Calculates upward heat flux given measured temperature, mean temperature, and the emissivity
+/// of the surface
 #[requires(emissivity > 0.0)]
 #[requires(mean_temp > 0.0)]
 #[requires(temp > 0.0)]
