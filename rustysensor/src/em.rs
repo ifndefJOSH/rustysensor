@@ -30,6 +30,7 @@ If you wish to do so, please reach out to the current maintainer.
 use contracts::*;
 // ===================== Basic EM in free space =====================
 
+/// General electromagnetic constants
 pub mod consts {
 	// ===================== Constants =====================
 	// These values taken from wikipedia
@@ -72,6 +73,7 @@ pub mod consts {
 	pub const EXOATMO_RAD : f64  = 2.02e7;
 }
 
+/// Tables of polarizability, composition, etc.
 pub mod tables {
 	use crate::em::consts::*;
 	use std::borrow::Cow;
@@ -80,22 +82,27 @@ pub mod tables {
 		optical : f64
 		, radio : f64
 	}
+	/// The optical and radio polarizability of air
 	pub const AIR_POLARIZABILITY : Polarizability = Polarizability{
 		optical : 21.7e-30 / EPSILON_0_SI
 		, radio : 21.4e-30 / EPSILON_0_SI
 	};
+	/// The optical and radio polarizability of CO2
 	pub const CO2_POLARIZABILITY : Polarizability = Polarizability{
 		optical : 33.6e-30 / EPSILON_0_SI
 		, radio : 36.8e-30 / EPSILON_0_SI
 	};
+	/// The optical and radio polarizability of Hydrogen gas
 	pub const HYDROGEN_POLARIZABILITY : Polarizability = Polarizability{
 		optical : 9.8e-30 / EPSILON_0_SI
 		, radio : 10.1e-30 / EPSILON_0_SI
 	};
+	/// The optical and radio polarizability of Oxygen gas
 	pub const OXYGEN_POLARIZABILITY : Polarizability = Polarizability{
 		optical : 20.2e-30 / EPSILON_0_SI
 		, radio : 19.8e-30 / EPSILON_0_SI
 	};
+	/// The optical and radio polarizability of water vapor
 	pub const H20_VAPOR_POLARIZABILITY : Polarizability = Polarizability{
 		optical : 18.9e-30 / EPSILON_0_SI
 		, radio : 368.0e-30 / EPSILON_0_SI

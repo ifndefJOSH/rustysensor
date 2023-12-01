@@ -149,11 +149,20 @@ pub fn sampled_along_track(velocity : f64, frequency : f64) -> f64 {
 // Radar altimetry
 
 /// Returns the min return time for a radar altimeter at height `height`.
+/// Computes using the formula $t = \frac{2h}{c}$
 pub fn min_return_time(height : f64) -> f64 {
 	return 2 * height / C;
 }
 
-/// Calculates the footprint radius for a radar altimetre
+/// Calculates the footprint radius for a radar altimeter
+///
+/// Parameters:
+/// - `rise_time`: The rise time of the sweep of the altimeter
+/// - `height`: The distance from the ground of the altimeter
+/// - `adjust_effective_height`: Whether or not to compensate for the curvature of the earth
+///
+/// Note: if you want to use a different planets' radius (such as defined in
+/// `ranged::consts`, you can use `effective_height` and do not adjust.
 pub fn footprint_radius(rise_time : f64, height : f64, adjust_effective_height : bool) -> f64 {
 	if adjust_effective_height {
 		return (C * height * rise_time).sqrt();
@@ -226,6 +235,17 @@ pub fn bistatic_flux_density(
 // TODO: should we also have an irradiance function?
 
 /// Computes the received radar power in a bistatic dual radar system
+///
+/// Params:
+/// - `b_scat_coefficient`: Bistatic scattering coefficient, denoted "gamma"
+/// - `collecting_area`   : The size of the collecting area
+/// - `effective_area`    : Effective area of receiver, Ar
+/// - `antenna_gain`      : The antenna's gain, Gt
+/// - `transmitted_power` : Transmitted power Pt
+/// - `incoming_angle`    : Incoming angle, theta_0
+/// - `exit_angle`        : The exit angle, theta_1
+/// - `transmit_dist`     : The distance from the transmitting antenna to the surface
+/// - `received_dist`     : The distance to the receiving antenna from the surface
 pub fn bistatic_radar_power(
 	b_scat_coefficient  : f64 // Bistatic scattering coefficient, denoted "gamma"
 	, collecting_area   : f64 // The size of the collecting area
@@ -255,7 +275,14 @@ pub fn range_resolution(tp : f64, theta : f64) -> f64 {
 	return C * tp / (2.0 * theta.sin());
 }
 
-/// Phase delay for Synthetic Aperture Radar (SAR) systems
+/// Phase delay for Synthetic Aperture Radar (SAR) systems.
+///
+/// Params:
+/// - `wave_num`: wavenumber of the radiation
+/// - `time`    : Scatter time
+/// - `velocity`: velocity of the system
+/// - `height`  : vertical difference between system and scatterer
+/// - `dist`    : horizontal distance between system and scatterer
 pub fn sar_phase_delay(
 	wave_num   : f64 // wavenumber of the radiation
 	, time     : f64 // Scatter time

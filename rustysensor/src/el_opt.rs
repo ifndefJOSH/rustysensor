@@ -32,14 +32,27 @@ If you wish to do so, please reach out to the current maintainer.
 // mod el_opt {
 use contracts::*;
 use crate::em::consts::*;
-mod tables {
+
+/// Tables related to electro optical systems
+pub mod tables {
+	/// A simple range struct containing the lower and upper bound and the
+	/// range index
 	#[derive(Clone, Debug)]
-	struct Range {
+	pub struct Range {
 		index : u8
 		, lbound : f64
 		, ubound : f64
 	}
-	const aster : [Range; 9]
+
+	impl Range {
+		/// Gets the bandwidth of the range
+		pub fn bandwidth(&self) -> f64 {
+			return ubound - lbound;
+		}
+	}
+
+	/// ASTER VNIR ranges
+	pub const aster : [Range; 9]
 				= [Range { index : 1, lbound : 0.0, ubound : 0.6e-6 },
 				Range { index : 2, lbound : 0.63e-6, ubound : 0.69e-6 },
 				Range { index : 3, lbound : 0.76e-6, ubound : 0.86e-6 },
@@ -50,7 +63,8 @@ mod tables {
 				Range { index : 8, lbound : 2.295e-6, ubound : 2.365e-6 },
 				Range { index : 9, lbound : 2.365e-6, ubound : 2.430e-6 }];
 
-	const modis : [Range; 19]
+	/// MODIS ranges
+	pub const modis : [Range; 19]
 				= [Range { index : 1, lbound : 6.2e-07, ubound : 6.7e-07 },
 				Range { index : 2, lbound : 8.41e-07, ubound : 8.76e-07 },
 				Range { index : 3, lbound : 4.59e-07, ubound : 4.79e-07 },
@@ -71,7 +85,8 @@ mod tables {
 				Range { index : 18, lbound : 9.31e-07, ubound : 9.41e-07 },
 				Range { index : 19, lbound : 9.15e-07, ubound : 9.65e-07 }];
 
-	const ocm_2  : [Range; 8]
+	/// OCM 2 ranges
+	pub const ocm_2  : [Range; 8]
 				= [Range { index : 1, lbound : 4.04e-07, ubound : 4.24e-07 },
 				Range { index : 2, lbound : 4.31e-07, ubound : 4.51e-07 },
 				Range { index : 3, lbound : 4.76e-07, ubound : 4.96e-07 },
@@ -80,6 +95,7 @@ mod tables {
 				Range { index : 6, lbound : 6.1e-07, ubound : 6.3e-07 },
 				Range { index : 7, lbound : 7.25e-07, ubound : 7.55e-07 },
 				Range { index : 8, lbound : 8.45e-07, ubound : 8.85e-07 }];
+
 }
 
 /// Computes diffraction angle given number of slits (`n`), `wavelength`,
