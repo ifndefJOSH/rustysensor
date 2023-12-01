@@ -216,7 +216,7 @@ pub fn bistatic_scattering_coefficient(brdf : f64, angle : f64) -> f64 {
 /// Computes flux density in a bistatic dual-radar system. However, this is only
 /// concerned with the flux density through the scanned surface.
 pub fn bistatic_flux_density(
-	antenna_gain      : f64 // The antenna's gain, Gt
+	antenna_gain        : f64 // The antenna's gain, Gt
 	, transmitted_power : f64 // Transmitted power Pt
 	, transmit_dist     : f64 // The distance from the transmitting antenna to the surface
 ) -> f64 {
@@ -239,6 +239,29 @@ pub fn bistatic_radar_power(
 ) -> f64 {
 	let f = bistatic_flux_density(antenna_gain, transmitted_power, transmit_dist);
 	let e = f * cos(incoming_angle);
-	let l = b_scat_coefficient * e / (4.0 * PI * cos(exit_angle));
+	let l = b_scat_coefficient * e / (4.0 * PI * exit_angle.cos());
 	return l * collecting_area * effective_area / received_dist.powi(2) * cos(exit_angle);
+}
+
+// Microwave scatterometry stuff
+
+/// Computes doppler shift given speed, angle, and relative velocity
+pub fn doppler_shift(transmitted_freq : f64, velocity : f64, angle : f64) -> f64 {
+	return 2.0 * transmitted_freq * velocity / C * angle.sin();
+}
+
+/// Range resolution for an SLR system
+pub fn range_resolution(tp : f64, theta : f64) -> f64 {
+	return C * tp / (2.0 * theta.sin());
+}
+
+/// Phase delay for Synthetic Aperture Radar (SAR) systems
+pub fn sar_phase_delay(
+	wave_num   : f64 // wavenumber of the radiation
+	, time     : f64 // Scatter time
+	, velocity : f64 // velocity of the system
+	, height   : f64 // vertical difference between system and scatterer
+	, dist     : f64 // horizontal distance between system and scatterer
+) -> f64 {
+	return 2.0 * wave_num * (height.powi(2) + (velocity * time - height).powi(2)).sqrt();
 }
