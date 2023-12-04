@@ -39,15 +39,15 @@ pub mod tables {
 	/// range index
 	#[derive(Clone, Debug)]
 	pub struct Range {
-		index : u8
-		, lbound : f64
-		, ubound : f64
+		pub index : u8
+		, pub lbound : f64
+		, pub ubound : f64
 	}
 
 	impl Range {
 		/// Gets the bandwidth of the range
 		pub fn bandwidth(&self) -> f64 {
-			return ubound - lbound;
+			return self.ubound - self.lbound;
 		}
 	}
 

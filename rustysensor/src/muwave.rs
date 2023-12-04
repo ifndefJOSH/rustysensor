@@ -260,9 +260,9 @@ pub fn polarization_ratio(t_19h : f64, t_19v : f64) -> f64 {
 }
 
 /// Computes gradient ratio ($GR$)
-#[requires(t_19h > 0.0)]
+#[requires(t_19v > 0.0)]
 #[requires(t_37v > 0.0)]
-#[ensures(t_19h < t_37v -> ret > 0.0)]
+#[ensures(t_19v < t_37v -> ret > 0.0)]
 pub fn gradient_ratio(t_19v : f64, t_37v : f64) -> f64 {
 	return (t_37v - t_19v) / (t_37v + t_19v);
 }

@@ -194,7 +194,7 @@ pub fn coherence_length(f_min : f64, f_max : f64) -> f64 {
 #[requires(frequency > 0.0)]
 #[ensures(ret > 0.0)]
 pub fn coherence_width(antenna_height : f64, frequency : f64, antenna_diameter : f64) -> f64 {
-	return c * antenna_height / (antenna_diameter * frequency);
+	return C * antenna_height / (antenna_diameter * frequency);
 }
 
 // TODO
@@ -258,9 +258,9 @@ pub fn bistatic_radar_power(
 	, received_dist     : f64 // The distance to the receiving antenna from the surface
 ) -> f64 {
 	let f = bistatic_flux_density(antenna_gain, transmitted_power, transmit_dist);
-	let e = f * cos(incoming_angle);
+	let e = f * incoming_angle.cos();
 	let l = b_scat_coefficient * e / (4.0 * PI * exit_angle.cos());
-	return l * collecting_area * effective_area / received_dist.powi(2) * cos(exit_angle);
+	return l * collecting_area * effective_area / received_dist.powi(2) * exit_angle.cos();
 }
 
 // Microwave scatterometry stuff
@@ -291,4 +291,14 @@ pub fn sar_phase_delay(
 	, dist     : f64 // horizontal distance between system and scatterer
 ) -> f64 {
 	return 2.0 * wave_num * (height.powi(2) + (velocity * time - height).powi(2)).sqrt();
+}
+
+/// Computes the noise equivalent power for a LiDAR detector
+///
+/// Params:
+/// - `area`: Area in cm^2
+/// - `bandwidth` : bandwidth of the receiver
+/// - `detectivity` : detectivity of the receiver
+pub fn noise_equiv_power(area : f64, bandwidth : f64, detectivity : f64) -> f64 {
+	return (area * bandwidth).sqrt() / detectivity;
 }

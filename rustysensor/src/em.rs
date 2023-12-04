@@ -79,8 +79,10 @@ pub mod tables {
 	use std::borrow::Cow;
 	#[derive(Clone, Debug)]
 	struct Polarizability {
-		optical : f64
-		, radio : f64
+		// The polarizability in the optical range
+		pub optical : f64
+		// The polarizability in the radio range
+		, pub radio : f64
 	}
 	/// The optical and radio polarizability of air
 	pub const AIR_POLARIZABILITY : Polarizability = Polarizability{
@@ -111,9 +113,9 @@ pub mod tables {
 	/// A particular fraction of the atmosphere
 	#[derive(Clone, Debug)]
 	pub struct AtmosFraction {
-		chemical : Cow<'static, str>
-		, volume_frac : f64
-		, mass : f64
+		pub chemical : Cow<'static, str>
+		, pub volume_frac : f64
+		, pub mass : f64
 	}
 	/// Total composition of the atmosphere
 	pub const composition : [AtmosFraction; 12] = [
