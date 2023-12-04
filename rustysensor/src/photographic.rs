@@ -102,7 +102,7 @@ pub fn radial_distort(x : &mut f64, y : &mut f64, slope : Option<f64>) {
 #[requires(camera_location.len() == 3)]
 #[requires(object_location.len() == 3)]
 #[requires(f_len > 0.0)]
-pub fn image_location(out_pt : &mut [f64], camera_location : &[f64], object_location : &[f64], f_len : f64) -> f64 {
+pub fn image_location(out_pt : &mut [f64], camera_location : &[f64], object_location : &[f64], f_len : f64) {
 	let x_pr = object_location[0] - camera_location[0];
 	let y_pr = object_location[1] - camera_location[1];
 	let z_pr = object_location[2] - camera_location[2];
@@ -186,7 +186,7 @@ pub fn contrast(rmax : f64, rmin : f64) -> f64 {
 /// Computes the contrast of a black and white multi-dimensional vector of pixel values
 #[requires(img.len() > 0)]
 #[requires(img[0].len() > 0)]
-pub fn img_contrast(img : &[[f64]]) -> f64 {
+pub fn img_contrast(img : &[&[f64]]) -> f64 {
 	let mut rmax = img[0][0];
 	let mut rmin = img[0][0];
 	let height = img[0].len();

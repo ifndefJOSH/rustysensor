@@ -263,12 +263,20 @@ pub unsafe fn surface_temp_split_window(temp_b1 : f64, temp_b2 : f64) -> f64 {
  * */
 #[requires(temps_b0.len() == temps_b1.len() && temps_b1.len() == temps_b2.len())]
 pub unsafe fn train_split_window(temps_b0 : &[f64], temps_b1 : &[f64], temps_b2 : &[f64]) {
-	a0 = 0.0;
-	a1 = 0.0;
-	a2 = 0.0;
-	for _i in 0..temps_b0.len() {
-		// TODO
-	}
+	panic!("This function is not yet implemented! I am currently debating whether or not to include a minimizing least squares in this library (due to size and modularity), as it's been done already in a lot of other libraries. For now, use `set_split_window_coeffs` to manually set coefficients with those you get from another linear least squares library, such as the `lstsq` crate.");
+	// a0 = 0.0;
+	// a1 = 0.0;
+	// a2 = 0.0;
+	// for _i in 0..temps_b0.len() {
+	// 	// TODO
+	// }
+}
+
+/// Manually sets the split window coefficients
+pub unsafe fn set_split_window_coeffs(a0_new : f64, a1_new : f64, a2_new : f64) {
+	a0 = a0_new;
+	a1 = a1_new;
+	a2 = a2_new;
 }
 
 /// Computes the surface temp of a two-sensor system without also returning $\tau$

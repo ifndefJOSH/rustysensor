@@ -151,7 +151,7 @@ pub fn sampled_along_track(velocity : f64, frequency : f64) -> f64 {
 /// Returns the min return time for a radar altimeter at height `height`.
 /// Computes using the formula $t = \frac{2h}{c}$
 pub fn min_return_time(height : f64) -> f64 {
-	return 2 * height / C;
+	return 2.0 * height / C;
 }
 
 /// Calculates the footprint radius for a radar altimeter
