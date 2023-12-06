@@ -302,3 +302,73 @@ pub fn sar_phase_delay(
 pub fn noise_equiv_power(area : f64, bandwidth : f64, detectivity : f64) -> f64 {
 	return (area * bandwidth).sqrt() / detectivity;
 }
+
+// Triangulation and trilateration
+
+/// Triangulates the location between two points to the point equidistant between
+/// those points, given known angle and distances.
+///
+/// ![Diagram from Wikipedia](https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Triangulation-boat.png/310px-Triangulation-boat.png)<br>
+/// *(Credit: Svjo, Wikipedia, CC-BY-SA 4.0)*
+///
+/// Parameters
+/// - `dist`: The distance between the two measuring points. In the provided
+/// diagram, this is the distance between points A and B.
+/// - `angle1`: The angle measured by the first system, in radians.
+/// $\alpha$ in the image.
+/// - `angle2`: The angle measured by the second system, in radians.
+/// $\beta$ in the image.
+#[requires(dist > 0.0)]
+pub fn triangulate(dist : f64, angle1 : f64, angle2 : f64) -> f64 {
+	return dist * angle1.sin() * angle2.sin() / (angle1 + angle2).sin();
+}
+
+/// Trilaterates the location between three points.
+///
+/// See [this StackExchange post](https://math.stackexchange.com/questions/884807/find-x-location-using-3-known-x-y-location-using-trilateration)
+/// for how this is calculated. (Thank you John from stackexchange)
+#[requires(point1.len() == point2.len()
+	&& point2.len() == point3.len()
+	&& point3.len() == 2)]
+#[requires(dist1 > 0.0)]
+#[requires(dist2 > 0.0)]
+#[requires(dist3 > 0.0)]
+pub fn trilaterate(
+	point1         : &[f64]
+	, dist1        : f64
+	, point2       : &[f64]
+	, dist2        : f64
+	, point3       : &[f64]
+	, dist3        : f64
+	, result_point : &mut [f64]
+) {
+	let x1 = point1[0];
+	let y1 = point1[1];
+	let x2 = point2[0];
+	let y2 = point2[1];
+	let x3 = point3[0];
+	let y3 = point3[1];
+	// Only compute squared distances once
+	let dist1_sq = dist1.powi(2);
+	let dist2_sq = dist2.powi(2);
+	let dist3_sq = dist3.powi(2);
+	// Only compute squared x and y once
+	let x1_sq = x1.powi(2);
+	let x2_sq = x2.powi(2);
+	let x3_sq = x3.powi(2);
+	let y1_sq = y1.powi(2);
+	let y2_sq = y2.powi(2);
+	let y3_sq = y3.powi(2);
+	// Blorp
+	let a = 2.0 * (x2 - x1);
+	let b = 2.0 * (y2 - y1);
+	let c = dist1_sq - dist2_sq - x1_sq + x2_sq - y1_sq + y2_sq;
+	let d = 2.0 * (x3 - x2);
+	let e = 2.0 * (y3 - y2);
+	let f = dist2_sq - dist3_sq - x2_sq + x3_sq - y2_sq + y3_sq;
+	// Only compute bd once since it's used twice
+	let bd = b * d;
+	// Results
+	result_point[0] = (c * e - f * b) / (e * a - bd);
+	result_point[1] = (c * d - a * f) / (bd - a * e);
+}

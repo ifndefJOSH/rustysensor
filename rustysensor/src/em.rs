@@ -359,12 +359,23 @@ pub fn fog_scattering_coefficient(mass_density : f64, radius : f64) -> f64 {
 }
 
 /// Computes the refractive index of a plasma
+///
+/// Input parameters
+/// - `num_density`: The number of particles free in the plasma per unit volume.
+/// - `angular_frequency`: See [plasma oscillation on Wikipedia](https://en.wikipedia.org/wiki/Plasma_oscillation).
 pub fn plasma_refractive_index(num_density : u32, angular_frequency : f64) -> f64 {
 	return 1.0 - num_density as f64 * CHARGE_E.powi(2) / (2.0 * EPSILON_0_SI * MASS_E * angular_frequency.powi(2));
 }
 
 /// Computes the phase velocity of a plasma.
-/// NOTE: Phase velocities may be higher than the speed of light
+///
+/// **NOTE:** Phase velocities may be higher than the speed of light. This is NOT a
+/// bug. It is INFORMATION which is constrained to the speed of light or less,
+/// so a phase velocity higher than C doesn't break physics.
+///
+/// Input parameters
+/// - `num_density`: The number of particles free in the plasma per unit volume.
+/// - `angular_frequency`: See [plasma oscillation on Wikipedia](https://en.wikipedia.org/wiki/Plasma_oscillation).
 pub fn plasma_phase_velocity(num_density : u32, angular_frequency : f64) -> f64 {
 	let n = plasma_refractive_index(num_density, angular_frequency);
 	return C / n;
