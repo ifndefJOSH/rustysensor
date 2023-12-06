@@ -1,0 +1,19 @@
+Licensing Compatibility Notice for RustySensor
+
+Introduction:
+
+RustySensor is released under the GNU General Public License, version 3 (GPLv3), a copyleft license designed to maintain the open-source nature of derivative works. This document provides clarity on the decision not to incorporate the Hosek-Wilkie sky irradiance data, which is licensed under the BSD 3-clause license, into this project.
+
+Licensing Considerations:
+
+While both the GNU GPLv3 and the BSD 3-clause license are open-source licenses, they differ significantly in terms of their requirements. The BSD 3-clause license is more permissive, allowing for a broad range of uses, including proprietary software, with the sole requirement of preserving the original copyright notice.
+
+On the other hand, the GPLv3 is a copyleft license, mandating that any derivative works be released under the same license. Integrating data from a BSD 3-clause licensed source into a GPLv3 project can create licensing conflicts due to the permissive nature of the BSD license, which may not align with the strict copyleft provisions of the GPL.
+
+Avoiding Licensing Conflicts:
+
+To maintain compliance with licensing terms and uphold the open-source principles of RustySensor, the decision has been made not to include the Hosek-Wilkie sky irradiance data. Developers are advised to review the licensing terms of external sources before integration, seeking alternative solutions or obtaining appropriate permissions if necessary.
+
+Conclusion:
+
+Respecting and understanding the licensing terms of third-party sources is essential for maintaining a clear and compliant open-source project. This documentation aims to provide transparency about the decision-making process, ensuring adherence to the principles of the GNU General Public License, version 3, and fostering a collaborative and legally sound development environment for RustySensor.

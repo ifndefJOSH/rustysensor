@@ -302,6 +302,8 @@ pub fn plasma_dielectric_constant(num_density : u32, angular_frequency : f64) ->
 	return 1.0 - num_density as f64 * CHARGE_E / (EPSILON_0_SI * MASS_E * angular_frequency.powi(2));
 }
 
+// TODO: could also add appelton hartree equation (https://en.wikipedia.org/wiki/Appleton%E2%80%93Hartree_equation)
+
 /// Computes the refractive index of a gas
 pub fn gas_refractive_index(num_density : u32, polarizability : f64) -> f64 {
 	return 1.0 + (num_density as f64 * polarizability) / (2.0 * EPSILON_0_SI);
@@ -353,6 +355,8 @@ pub fn fog_liquid_mass_density(num_density : u64, radius : f64) -> f64 {
 }
 
 /// Computes the scattering coefficient of fog.
+#[requires(mass_density > 0.0)]
+#[requires(radius > 0.0)]
 pub fn fog_scattering_coefficient(mass_density : f64, radius : f64) -> f64 {
 	let WATER_DENSITY = 1.0;
 	return 3.0 * mass_density / (4.0 * radius * WATER_DENSITY);
@@ -363,6 +367,8 @@ pub fn fog_scattering_coefficient(mass_density : f64, radius : f64) -> f64 {
 /// Input parameters
 /// - `num_density`: The number of particles free in the plasma per unit volume.
 /// - `angular_frequency`: See [plasma oscillation on Wikipedia](https://en.wikipedia.org/wiki/Plasma_oscillation).
+#[requires(angular_frequency > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn plasma_refractive_index(num_density : u32, angular_frequency : f64) -> f64 {
 	return 1.0 - num_density as f64 * CHARGE_E.powi(2) / (2.0 * EPSILON_0_SI * MASS_E * angular_frequency.powi(2));
 }
@@ -376,6 +382,8 @@ pub fn plasma_refractive_index(num_density : u32, angular_frequency : f64) -> f6
 /// Input parameters
 /// - `num_density`: The number of particles free in the plasma per unit volume.
 /// - `angular_frequency`: See [plasma oscillation on Wikipedia](https://en.wikipedia.org/wiki/Plasma_oscillation).
+#[requires(angular_frequency > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn plasma_phase_velocity(num_density : u32, angular_frequency : f64) -> f64 {
 	let n = plasma_refractive_index(num_density, angular_frequency);
 	return C / n;

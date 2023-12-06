@@ -136,6 +136,9 @@ pub fn jnoise_power(antenna_temp : f64, band_size : f64) -> f64 {
 /// the type of antenna:
 /// 1. For rectangular, it's the size of the sides
 /// 2. For Circular paraboloid it's the diameter
+#[requires(lambda > 0.0)]
+#[requires(size > 0.0)]
+#[ensures(ret >= 0.0)]
 pub fn hpbw(lambda : f64, size : f64, atype : AntennaType) -> f64 {
 	if atype == AntennaType::Monopole {
 		return 0.0; // isomorphic
@@ -165,6 +168,7 @@ pub fn directivity(bsa : f64) -> f64 {
 /// Computes beam solid angle from power pattern via numerical integration
 /// Takes: `P` a dynamic function taking $\theta$ and $\phi$ in radians in that order and providing the power pattern's value at that angle.
 ///        `step` the step for numerical integration (if `None` is passed in, defaults to `0.01`)
+#[requires(step.is_some() -> step.unwrap() > 0.0)]
 pub fn beam_solid_angle(P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
 	let s : f64 = step.unwrap_or(0.01);
 	// Size of square for integration
@@ -183,6 +187,8 @@ pub fn beam_solid_angle(P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 
 }
 
 /// Computes antenna temperature via numerical integration
+/// Once again, default `step` is `0.01`.
+#[requires(step.is_some() -> step.unwrap() > 0.0)]
 pub fn antenna_temp(TB: &dyn Fn(f64, f64) -> f64, P: &dyn Fn(f64, f64) -> f64, step : Option<f64>) -> f64 {
 	let bsa = beam_solid_angle(P, step);
 	let s : f64 = step.unwrap_or(0.01);
@@ -203,6 +209,8 @@ pub fn antenna_temp(TB: &dyn Fn(f64, f64) -> f64, P: &dyn Fn(f64, f64) -> f64, s
 
 
 /// Computes forward gain using power pattern and efficiency
+///
+/// Note: Uses default step in `beam_solid_angle` integration.
 pub fn forward_gain(efficiency : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
 	// Directivity
 	let d = 4.0 * PI / beam_solid_angle(P, None);

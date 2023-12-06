@@ -111,6 +111,8 @@ pub mod photographic;
 pub mod ranged;
 
 
+// #![doc(html_logo_url = "https://avatars.githubusercontent.com/u/57412412?s=400&u=2c0cba1976b3b41972459647a80f5312c79aa5aa&v=4")]
+
 #[cfg(test)]
 mod tests {
     use super::*;

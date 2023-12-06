@@ -384,4 +384,112 @@ pub fn upward_heat_flux(temp : f64, mean_temp : f64, emissivity : f64) -> f64 {
 
 // TODO: Hosek-Wilkie and Preetham
 
-// pub fn hosek_wilkie_luminance
+// Hosek-Wilkie stuff
+
+static mut params : Option<[[f64; 3]; 9]> = None;
+
+// Coefficients used in the Hosek-Wilkie algorithm
+#[requires(params.is_some())]
+unsafe fn hw_A(zenith : f64, azimuth : f64) -> f64 {
+	let param = params.unwrap()[0];
+	return param[0] * param[1] * param[2];
+}
+
+#[requires(params.is_some())]
+unsafe fn hw_B(zenith : f64, azimuth : f64) -> f64 {
+	let param = params.unwrap()[1];
+	return param[0] * param[1] * param[2];
+}
+
+#[requires(params.is_some())]
+unsafe fn hw_C(zenith : f64, azimuth : f64) -> f64 {
+	let param = params.unwrap()[2];
+	return param[0] * param[1] * param[2];
+}
+
+#[requires(params.is_some())]
+unsafe fn hw_D(zenith : f64, azimuth : f64) -> f64 {
+	let param = params.unwrap()[3];
+	return param[0] * param[1] * param[2];
+}
+
+#[requires(params.is_some())]
+unsafe fn hw_E(zenith : f64, azimuth : f64) -> f64 {
+	let param = params.unwrap()[4];
+	return param[0] * param[1] * param[2];
+}
+
+#[requires(params.is_some())]
+unsafe fn hw_F(zenith : f64, azimuth : f64) -> f64 {
+	let param = params.unwrap()[5];
+	return param[0] * param[1] * param[2];
+}
+
+#[requires(params.is_some())]
+unsafe fn hw_G(zenith : f64, azimuth : f64) -> f64 {
+	let param = params.unwrap()[6];
+	return param[0] * param[1] * param[2];
+}
+
+#[requires(params.is_some())]
+unsafe fn hw_H(zenith : f64, azimuth : f64) -> f64 {
+	let param = params.unwrap()[7];
+	return param[0] * param[1] * param[2];
+}
+
+#[requires(params.is_some())]
+unsafe fn hw_I(zenith : f64, azimuth : f64) -> f64 {
+	let param = params.unwrap()[8];
+	return param[0] * param[1] * param[2];
+}
+
+/// Computes the value of $\chi$, the anisotropic term used in the Hosek-Wilkie algorithm
+pub fn hosek_wilkie_anisotropic(g : f64, alpha : f64) -> f64 {
+	let alph_cos = alpha.cos();
+	return (1.0 + alph_cos.powi(2)) / (1.0 + g.powi(2) - 2.0 * g * alph_cos).powf(1.5);
+}
+
+/// Computes the radiance of the sky using the Hosek-Wilkie algorithm according to
+/// their first paper.
+///
+/// - `zenith`: often denoted $\theta$, the solar zenith angle, i.e., the angle between the sun and the zenith.
+/// - `azimuth`: often denoted $\gamma$, the solar azimuth angle.
+/// - `turbidity`: the turbidity metric used
+/// - `g_albedo`: The ground albedo used
+///
+/// **Note:** Hosek-Wilkie parameters are not provided due to licensing issues (rustysensor is GPLv3 and
+/// the parameters are licensed under the BSD-3 license).
+///
+/// Reference Links:
+/// - Parameters available: published by the author [here](https://cgg.mff.cuni.cz/projects/SkylightModelling/)
+/// - The original paper [in PDF format](https://cgg.mff.cuni.cz/projects/SkylightModelling/HosekWilkie_SkylightModel_SIGGRAPH2012_Preprint_lowres.pdf)
+#[requires(params.is_some())]
+pub unsafe fn hosek_wilkie_luminance(zenith : f64, azimuth : f64) -> f64 {
+	let A = hw_A(zenith, azimuth);
+	let B = hw_B(zenith, azimuth);
+	let C_hw = hw_C(zenith, azimuth);
+	let D = hw_D(zenith, azimuth);
+	let E = hw_E(zenith, azimuth);
+	let F = hw_F(zenith, azimuth);
+	let G = hw_G(zenith, azimuth);
+	let H_hw = hw_H(zenith, azimuth);
+	let I = hw_I(zenith, azimuth);
+	let chi = hosek_wilkie_anisotropic(H_hw, azimuth);
+	let zenith_cos = zenith.cos();
+	return (
+		1.0 + A * (B / zenith_cos + 0.01).exp()) * (C_hw
+			+ D * (E * azimuth).exp()
+			+ F * azimuth.cos().powi(2)
+			+ G * chi
+			+ I * zenith_cos.sqrt());
+}
+
+/// Sets the parameters for the Hosek Wilkie radiance pattern. Note that
+/// patterns can be obtained in C from the original authors [here](https://cgg.mff.cuni.cz/projects/SkylightModelling/)
+///
+/// These parameters are not included due to licensing restrictions. See the file `LICENSING_COMPATIBILITY.txt` in the
+/// Github repository for a full explaination as to why.
+#[ensures(params.is_some())]
+pub unsafe fn set_hosek_wilkie_params(new_params : [[f64; 3]; 9]) {
+	params = Some(new_params);
+}

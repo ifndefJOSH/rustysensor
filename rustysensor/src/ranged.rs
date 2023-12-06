@@ -60,6 +60,9 @@ pub mod consts {
 use crate::ranged::consts::*;
 
 /// The travel time given range and group velocity
+#[requires(range > 0.0)]
+#[requires(group_velocity > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn travel_time(range : f64, group_velocity : f64) -> f64 {
 	return 2.0 * range / group_velocity;
 }
@@ -86,11 +89,22 @@ pub fn averaging_rms_snr(signal : &[f64], noise : &[f64]) -> f64 {
 // Laser profiling systems
 
 /// The accuracy ratio given rise time and signal to noise ratio
+#[requires(rise_time > 0.0)]
+#[requires(snr > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn accuracy(rise_time : f64, snr : f64) -> f64 {
 	return rise_time / snr;
 }
 
 /// The range accuracy
+#[requires(vg > 0.0)]
+#[requires(tr_op.is_some() -> tr_op.unwrap() > 0.0)]
+#[requires(s_op.is_some() -> s_op.unwrap() > 0.0)]
+#[requires(v_op.is_some() -> v_op.unwrap() > 0.0)]
+#[requires(h_op.is_some() -> h_op.unwrap() > 0.0)]
+#[requires(p_op.is_some() -> p_op.unwrap() > 0.0)]
+#[requires(del_theta_op.is_some() -> del_theta_op.unwrap() > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn range_accuracy(
 	vg : f64
 	, tr_op : Option<f64>
@@ -113,19 +127,28 @@ pub fn range_accuracy(
 // TODO: radar range equation
 
 /// Range ambiguity. `p_op` defaults to `1000.0` if not provided
+#[requires(vg > 0.0)]
+#[requires(p_op.is_some() -> p_op.unwrap() > 0.0)]
 pub fn range_ambiguity(vg : f64, p_op  : Option<f64>) -> f64 {
 	let p : f64 = p_op.unwrap_or(1000.0);
 	return vg / 2.0 * p;
 }
 
 /// The upper bound of possible periods. Note that this period is
-/// an unreachable upper bound.
+/// an unreachable upper bound. This means that all periods which
+/// can in practice be used must be strictly less than the period
+/// returned here.
+#[requires(vg > 0.0)]
+#[requires(h_op.is_some() -> h_op.unwrap() > 0.0)]
 pub fn longest_period(vg : f64, h_op  : Option<f64>) -> f64 {
 	let h  : f64 = h_op.unwrap_or(200.0);
 	return vg / 2.0 * h;
 }
 
 /// Returns `true` if the period `p` passed in is ideal according to `vg` and `h_op`
+#[requires(p > 0.0)]
+#[requires(vg > 0.0)]
+#[requires(h_op.is_some() -> h_op.unwrap() > 0.0)]
 pub fn is_ideal_period(p : f64, vg : f64, h_op : Option<f64>) -> bool {
 	return p < longest_period(vg, h_op);
 }
@@ -134,6 +157,10 @@ pub fn is_ideal_period(p : f64, vg : f64, h_op : Option<f64>) -> bool {
 /// Calculates the spacing of samples when sampling cross track,
 /// given the frequency, the angle, phi, and h, the range.
 /// `frequency` is the frequency of the sampling pattern's zig zag profile
+#[requires(frequency > 0.0)]
+#[requires(angle >= 0.0 && angle < 6.29)]
+#[requires(impulse_period > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn sampled_cross_track(frequency : f64, angle : f64, h : f64, impulse_period : f64) -> f64 {
 	return 4.0 * angle * frequency * h / impulse_period;
 }
@@ -142,14 +169,19 @@ pub fn sampled_cross_track(frequency : f64, angle : f64, h : f64, impulse_period
 /// Computes the average sampling interval in along-track direction.
 /// `velocity` is the velocity of the profiler, and `frequency is the
 /// frequency of the sampling pattern
+#[requires(velocity > 0.0)]
+#[requires(frequency > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn sampled_along_track(velocity : f64, frequency : f64) -> f64 {
 	return velocity / frequency;
 }
 
 // Radar altimetry
 
-/// Returns the min return time for a radar altimeter at height `height`.
-/// Computes using the formula $t = \frac{2h}{c}$
+/// Returns the min return time for a radar altimeter or other EM system at height `height`.
+/// Computes using the formula $t = \frac{2h}{c}$.
+#[requires(height > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn min_return_time(height : f64) -> f64 {
 	return 2.0 * height / C;
 }
@@ -163,6 +195,9 @@ pub fn min_return_time(height : f64) -> f64 {
 ///
 /// Note: if you want to use a different planets' radius (such as defined in
 /// `ranged::consts`, you can use `effective_height` and do not adjust.
+#[requires(rise_time > 0.0)]
+#[requires(height > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn footprint_radius(rise_time : f64, height : f64, adjust_effective_height : bool) -> f64 {
 	if adjust_effective_height {
 		return (C * height * rise_time).sqrt();
@@ -174,6 +209,8 @@ pub fn footprint_radius(rise_time : f64, height : f64, adjust_effective_height :
 /// Calculates the effective height accounting for the curvature of a spherical
 /// celestial body. If no radius is provided, then it defaults to the Earth's
 /// radius, in kilometers.
+#[requires(height > 0.0)]
+#[requires(radius.is_some() -> radius.unwrap() > 0.0)]
 pub fn effective_height(height : f64, radius : Option<f64>) -> f64 {
 	// default to earth's radius since most systems are here on earth
 	let rad = radius.unwrap_or(EARTH_RAD);
