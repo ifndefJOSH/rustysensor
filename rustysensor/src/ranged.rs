@@ -203,6 +203,8 @@ pub fn coherence_width(antenna_height : f64, frequency : f64, antenna_diameter :
 
 // most basic brdf: R = L1 / E
 /// Basic brdf estimate `radiance / irradiance`
+#[requires(radiance > 0.0)]
+#[requires(irradiance > 0.0)]
 pub fn brdf_basic(radiance : f64, irradiance : f64) -> f64 {
 	return radiance / irradiance;
 }
@@ -210,6 +212,9 @@ pub fn brdf_basic(radiance : f64, irradiance : f64) -> f64 {
 
 /// A basic means of calculating the bistatic scattering coefficient with
 /// the approximation of the brdf in `brdf_basic`.
+#[requires(radiance > 0.0)]
+#[requires(irradiance > 0.0)]
+#[requires(angle > 0.0)]
 pub fn bistatic_scattering_coefficient_basic(radiance : f64, irradiance : f64, angle : f64) -> f64 {
 	let r = brdf_basic(radiance, irradiance);
 	return bistatic_scattering_coefficient(r, angle);
@@ -218,12 +223,17 @@ pub fn bistatic_scattering_coefficient_basic(radiance : f64, irradiance : f64, a
 /// The more general `bistatic_scattering_coefficient` function which
 /// takes a known brdf. If brdf is calculated using `brdf_basic` this is equivalent
 /// to `bistatic_scattering_coefficient_basic`
+#[requires(brdf > 0.0)]
+#[requires(angle > 0.0)]
 pub fn bistatic_scattering_coefficient(brdf : f64, angle : f64) -> f64 {
 	return 4.0 * PI * brdf * angle.cos();
 }
 
 /// Computes flux density in a bistatic dual-radar system. However, this is only
 /// concerned with the flux density through the scanned surface.
+#[requires(antenna_gain > 0.0)]
+#[requires(transmitted_power > 0.0)]
+#[requires(transmit_dist > 0.0)]
 pub fn bistatic_flux_density(
 	antenna_gain        : f64 // The antenna's gain, Gt
 	, transmitted_power : f64 // Transmitted power Pt
@@ -246,6 +256,15 @@ pub fn bistatic_flux_density(
 /// - `exit_angle`        : The exit angle, theta_1
 /// - `transmit_dist`     : The distance from the transmitting antenna to the surface
 /// - `received_dist`     : The distance to the receiving antenna from the surface
+#[requires(b_scat_coefficient > 0.0)]
+#[requires(collecting_area > 0.0)]
+#[requires(effective_area > 0.0)]
+#[requires(antenna_gain > 0.0)]
+#[requires(transmitted_power > 0.0)]
+#[requires(incoming_angle > 0.0)]
+#[requires(exit_angle > 0.0)]
+#[requires(transmit_dist > 0.0)]
+#[requires(received_dist > 0.0)]
 pub fn bistatic_radar_power(
 	b_scat_coefficient  : f64 // Bistatic scattering coefficient, denoted "gamma"
 	, collecting_area   : f64 // The size of the collecting area
@@ -266,11 +285,16 @@ pub fn bistatic_radar_power(
 // Microwave scatterometry stuff
 
 /// Computes doppler shift given speed, angle, and relative velocity
+#[requires(transmitted_freq > 0.0)]
+#[requires(velocity > 0.0)]
+#[requires(angle >= 0.0 && angle <= 6.29)]
 pub fn doppler_shift(transmitted_freq : f64, velocity : f64, angle : f64) -> f64 {
 	return 2.0 * transmitted_freq * velocity / C * angle.sin();
 }
 
 /// Range resolution for an SLR system
+#[requires(tp > 0.0)]
+#[requires(theta >= 0.0 && theta <= 6.29)]
 pub fn range_resolution(tp : f64, theta : f64) -> f64 {
 	return C * tp / (2.0 * theta.sin());
 }
@@ -283,6 +307,11 @@ pub fn range_resolution(tp : f64, theta : f64) -> f64 {
 /// - `velocity`: velocity of the system
 /// - `height`  : vertical difference between system and scatterer
 /// - `dist`    : horizontal distance between system and scatterer
+#[requires(wave_num > 0.0)]
+#[requires(time > 0.0)]
+#[requires(velocity > 0.0)]
+#[requires(height > 0.0)]
+#[requires(dist > 0.0)]
 pub fn sar_phase_delay(
 	wave_num   : f64 // wavenumber of the radiation
 	, time     : f64 // Scatter time
@@ -299,6 +328,9 @@ pub fn sar_phase_delay(
 /// - `area`: Area in cm^2
 /// - `bandwidth` : bandwidth of the receiver
 /// - `detectivity` : detectivity of the receiver
+#[requires(area > 0.0)]
+#[requires(bandwidth > 0.0)]
+#[requires(detectivity > 0.0)]
 pub fn noise_equiv_power(area : f64, bandwidth : f64, detectivity : f64) -> f64 {
 	return (area * bandwidth).sqrt() / detectivity;
 }
