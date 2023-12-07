@@ -252,6 +252,9 @@ pub fn bb_radiation(temp : f64) -> f64 {
 /// Note: Fraunhofer diffraction generally just requires fft
 /// For some window, w, we can just use this $sinc()$ approximation:
 /// $diffraction = \frac{n w \sin(\theta)}{2}$
+#[requires(wnum > 0.0)]
+#[requires(window > 0.0)]
+#[requires(theta > 0.0 && theta < 6.29)]
 pub fn windowed_fraunhofer_diffraction(wnum : f64, window : f64, theta : f64) -> f64 {
 	let sinc_arg = wnum * window * theta.sin() / 2.0;
 	let sinc = sinc_arg.sin() / sinc_arg;
@@ -261,43 +264,65 @@ pub fn windowed_fraunhofer_diffraction(wnum : f64, window : f64, theta : f64) ->
 // ===================== EM radiation interacting with matter =====================
 
 /// Computes $\epsilon = \epsilon_r\epsilon_0$
+#[requires(ratio > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn electric_permeability(ratio : f64) -> f64 {
 	return ratio * EPSILON_0_SI;
 }
 
 /// Computes $\mu = \mu\mu_0$
+#[requires(ratio > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn magnetic_permeability(ratio : f64) -> f64 {
 	return ratio * MU_0;
 }
 
 /// Gets the ratio of the magnitudes of (90 degree phase) E field vs B field
 /// in homogenous materials
+#[requires(e_ratio > 0.0)]
+#[requires(mu_ratio > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn homogeneous_material_eb_ratio(e_ratio : f64, mu_ratio : f64) -> f64 {
 	return C / (e_ratio * mu_ratio).sqrt();
 }
 
 /// Computes refractive index given $\epsilon_r$ and $\mu_r$.
+#[requires(e_ratio > 0.0)]
+#[requires(mu_ratio > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn refractive_index(e_ratio : f64, mu_ratio : f64) -> f64 {
 	return (e_ratio * mu_ratio).sqrt();
 }
 
 /// Computes absorption length
+#[requires(angular_frequency > 0.0)]
+#[requires(k > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn absorption_length(angular_frequency : f64, k : f64) -> f64 {
 	return C / (2.0 *  angular_frequency * k);
 }
 
 /// At radio frequencies, we can use this approximation
 /// to compute the absorption length for metals given conductivity
+#[requires(angular_frequency > 0.0)]
+#[requires(conductivity > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn metal_absorption_length(angular_frequency : f64, conductivity : f64) -> f64 {
 	return C * (EPSILON_0_SI / (2.0 * conductivity * angular_frequency)).sqrt();
 }
 
 /// Computes the dielectric constant of a gas
+#[requires(num_density > 0)]
+#[requires(polarizability > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn gas_dielectric_constant(num_density : u32, polarizability : f64) -> f64 {
 	return 1.0 + (num_density as f64 * polarizability) / EPSILON_0_SI;
 }
 
 /// Computes the dielectric constant of a plasma
+#[requires(num_density > 0)]
+#[requires(angular_frequency > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn plasma_dielectric_constant(num_density : u32, angular_frequency : f64) -> f64 {
 	return 1.0 - num_density as f64 * CHARGE_E / (EPSILON_0_SI * MASS_E * angular_frequency.powi(2));
 }
@@ -305,22 +330,36 @@ pub fn plasma_dielectric_constant(num_density : u32, angular_frequency : f64) ->
 // TODO: could also add appelton hartree equation (https://en.wikipedia.org/wiki/Appleton%E2%80%93Hartree_equation)
 
 /// Computes the refractive index of a gas
+#[requires(num_density > 0)]
+#[requires(polarizability > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn gas_refractive_index(num_density : u32, polarizability : f64) -> f64 {
 	return 1.0 + (num_density as f64 * polarizability) / (2.0 * EPSILON_0_SI);
 }
 
 /// Computes the $\tau$ component of $\epsilon$ for metals
+#[requires(N > 0)]
+#[requires(conductivity > 0.0)]
+#[ensures(ret > 0.0)]
 fn metal_dielectric_tau(N : u32, conductivity : f64) -> f64 {
 	return MASS_E * conductivity / (N as f64 * CHARGE_E.powi(2));
 }
 
 /// Computes the real part of $\epsilon$ for a metal
+#[requires(conductivity > 0.0)]
+#[requires(num_density > 0)]
+#[requires(angular_frequency > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn metal_dielectric_real(conductivity : f64, angular_frequency : f64, num_density : u32) -> f64 {
 	let tau : f64 = metal_dielectric_tau(num_density, conductivity);
 	return 1.0 - (conductivity * tau) / (EPSILON_0_SI * (1.0 + angular_frequency.powi(2) * tau.powi(2)));
 }
 
 /// Computes the imaginary part of $\epsilon$ for a metal
+#[requires(conductivity > 0.0)]
+#[requires(angular_frequency > 0.0)]
+#[requires(num_density > 0)]
+#[ensures(ret > 0.0)]
 pub fn metal_dielectric_imag(conductivity : f64, angular_frequency : f64, num_density : u32) -> f64 {
 	let tau : f64 = metal_dielectric_tau(num_density, conductivity);
 	let denom = EPSILON_0_SI * angular_frequency * (1.0 + angular_frequency.powi(2) * tau.powi(2));
@@ -336,6 +375,9 @@ pub fn plasma_transparency_frequency(num_density : u32) -> f64 {
 /// Using Snell's law, computes the exit angle of an entrant ray of
 /// light given two refracting indexes and an entrance angle.
 /// Snell's law is given by $n_1 \sin(\theta_1) = n_2 \sin(\theta_2)$
+#[requires(current_refractive > 0.0)]
+#[requires(new_refractive > 0.0)]
+#[requires(entry_angle >= 0.0 && entry_angle < 6.29)]
 pub fn exit_angle(entry_angle : f64, current_refractive : f64, new_refractive : f64) -> f64 {
 	return (current_refractive * entry_angle.sin() / new_refractive).asin();
 }
@@ -343,12 +385,19 @@ pub fn exit_angle(entry_angle : f64, current_refractive : f64, new_refractive : 
 // ===================== EM radiation interacting with Earths atmosphere =====================
 
 /// Computes the Angström attenuation given the base attenuation
+#[requires(wavelength > 0.0)]
+#[requires(base_attenuation > 0.0)]
+#[requires(angstroem_exponent.is_some() -> angstroem_exponent.unwrap() > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn angstroem_attenuation(wavelength : f64, base_attenuation : f64, angstroem_exponent : Option<f64>) -> f64 {
 	let n = angstroem_exponent.unwrap_or(4.0);
 	return base_attenuation * wavelength.powf(0.0 - n);
 }
 
 /// Computes the liquid mass density of fog
+#[requires(num_density > 0)]
+#[requires(radius > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn fog_liquid_mass_density(num_density : u64, radius : f64) -> f64 {
 	let WATER_DENSITY = 1.0;
 	return 4.0 * PI * radius.powi(3) * num_density as f64 * WATER_DENSITY / 3.0
@@ -357,6 +406,7 @@ pub fn fog_liquid_mass_density(num_density : u64, radius : f64) -> f64 {
 /// Computes the scattering coefficient of fog.
 #[requires(mass_density > 0.0)]
 #[requires(radius > 0.0)]
+#[ensures(ret > 0.0)]
 pub fn fog_scattering_coefficient(mass_density : f64, radius : f64) -> f64 {
 	let WATER_DENSITY = 1.0;
 	return 3.0 * mass_density / (4.0 * radius * WATER_DENSITY);

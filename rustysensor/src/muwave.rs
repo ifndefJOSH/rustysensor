@@ -211,6 +211,7 @@ pub fn antenna_temp(TB: &dyn Fn(f64, f64) -> f64, P: &dyn Fn(f64, f64) -> f64, s
 /// Computes forward gain using power pattern and efficiency
 ///
 /// Note: Uses default step in `beam_solid_angle` integration.
+#[requires(efficiency > 0.0)]
 pub fn forward_gain(efficiency : f64, P: &dyn Fn(f64, f64) -> f64) -> f64 {
 	// Directivity
 	let d = 4.0 * PI / beam_solid_angle(P, None);

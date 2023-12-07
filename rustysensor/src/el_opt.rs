@@ -465,16 +465,16 @@ pub fn hosek_wilkie_anisotropic(g : f64, alpha : f64) -> f64 {
 /// - The original paper [in PDF format](https://cgg.mff.cuni.cz/projects/SkylightModelling/HosekWilkie_SkylightModel_SIGGRAPH2012_Preprint_lowres.pdf)
 #[requires(params.is_some())]
 pub unsafe fn hosek_wilkie_luminance(zenith : f64, azimuth : f64) -> f64 {
-	let A = hw_A(zenith, azimuth);
-	let B = hw_B(zenith, azimuth);
+	let A    = hw_A(zenith, azimuth);
+	let B    = hw_B(zenith, azimuth);
 	let C_hw = hw_C(zenith, azimuth);
-	let D = hw_D(zenith, azimuth);
-	let E = hw_E(zenith, azimuth);
-	let F = hw_F(zenith, azimuth);
-	let G = hw_G(zenith, azimuth);
+	let D    = hw_D(zenith, azimuth);
+	let E    = hw_E(zenith, azimuth);
+	let F    = hw_F(zenith, azimuth);
+	let G    = hw_G(zenith, azimuth);
 	let H_hw = hw_H(zenith, azimuth);
-	let I = hw_I(zenith, azimuth);
-	let chi = hosek_wilkie_anisotropic(H_hw, azimuth);
+	let I    = hw_I(zenith, azimuth);
+	let chi  = hosek_wilkie_anisotropic(H_hw, azimuth);
 	let zenith_cos = zenith.cos();
 	return (
 		1.0 + A * (B / zenith_cos + 0.01).exp()) * (C_hw
