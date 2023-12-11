@@ -254,6 +254,9 @@ static mut a0 : f64 = 0.0;
 static mut a1 : f64 = 0.5;
 static mut a2 : f64 = 0.5;
 
+/// Calculates the surface temperature using the split-window approximation using pre-set
+/// coefficients. It is recommended to use a linear least squares library such as the `lstsq` crate
+/// to compute these coefficients, and then set them with `set_split_window_coeffs()`
 pub unsafe fn surface_temp_split_window(temp_b1 : f64, temp_b2 : f64) -> f64 {
 	return a0 + a1 * temp_b1 + a2 * temp_b2
 }
